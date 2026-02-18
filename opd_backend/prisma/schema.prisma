@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model appointment {
+  AppointmentID       Int                 @id @default(autoincrement())
+  AppointmentDateTime DateTime?           @db.DateTime(0)
+  PatientID           Int?
+  DoctorID            Int?
+  Status              appointment_Status?
+
+  @@index([DoctorID], map: "DoctorID")
+  @@index([PatientID], map: "PatientID")
+}
+
+model department {
+  DepartmentID   Int    @id @default(autoincrement())
+  DepartmentName String @db.VarChar(255)
+  HospitalID     Int?
+
+  @@index([HospitalID], map: "HospitalID")
+}
+
+model diagnosis {
+  DiagnosisID   Int     @id @default(autoincrement())
+  DiagnosisName String? @db.VarChar(255)
+  ICDCode       String? @db.VarChar(50)
+}
+
+model doctor {
+  DoctorID        Int      @id @default(autoincrement())
+  DoctorName      String   @db.VarChar(255)
+  DepartmentID    Int
+  ConsultationFee Decimal? @db.Decimal(10, 2)
+  HospitalID      Int?
+  UserID          Int?     @unique(map: "UserID")
+  photourl        String?  @db.VarChar(100)
+  Mobile          String?  @unique(map: "Mobile_UNIQUE") @db.VarChar(20)
+
+  @@index([DepartmentID], map: "DepartmentID")
+  @@index([HospitalID], map: "HospitalID")
+}
+
+model doctorspecialization {
+  DoctorSpecializationID Int       @id @default(autoincrement())
+  DoctorID               Int
+  SpecializationID       Int
+  YearsOfExperience      Int?
+  IsPrimary              Boolean?  @default(false)
+  CreatedAt              DateTime? @default(now()) @db.DateTime(0)
+
+  @@unique([DoctorID, SpecializationID], map: "DoctorID")
+  @@index([SpecializationID], map: "SpecializationID")
+}
+
+model hospital {
+  HospitalID         Int       @id @default(autoincrement())
+  HospitalName       String    @db.VarChar(255)
+  RegistrationCharge Decimal?  @db.Decimal(10, 2)
+  OpeningDate        DateTime? @db.Date
+  Address            String?   @db.VarChar(255)
+  ContactInfo        String?   @db.VarChar(100)
+}
+
+model invoice {
+  InvoiceID     Int       @id @default(autoincrement())
+  InvoiceNo     String?   @unique(map: "InvoiceNo") @db.VarChar(50)
+  OPDID         Int?
+  InvoiceDate   DateTime? @db.DateTime(0)
+  TotalAmount   Decimal?  @db.Decimal(10, 2)
+  PaymentModeID Int?
+
+  @@index([OPDID], map: "OPDID")
+  @@index([PaymentModeID], map: "PaymentModeID")
+}
+
+model invoiceitem {
+  InvoiceItemID Int      @id @default(autoincrement())
+  InvoiceID     Int?
+  ServiceID     Int?
+  Quantity      Int?
+  Rate          Decimal? @db.Decimal(10, 2)
+  Amount        Decimal? @db.Decimal(10, 2)
+
+  @@index([InvoiceID], map: "InvoiceID")
+  @@index([ServiceID], map: "ServiceID")
+}
+
+model opddiagnosis {
+  OPDDiagnosisID Int  @id @default(autoincrement())
+  OPDID          Int?
+  DiagnosisID    Int?
+
+  @@index([DiagnosisID], map: "DiagnosisID")
+  @@index([OPDID], map: "OPDID")
+}
+
+model opdvisit {
+  OPDID           Int                 @id @default(autoincrement())
+  OPDNo           String?             @unique(map: "OPDNo") @db.VarChar(50)
+  PatientID       Int?
+  DoctorID        Int?
+  VisitDateTime   DateTime?           @db.DateTime(0)
+  VisitType       opdvisit_VisitType?
+  RegistrationFee Decimal?            @db.Decimal(10, 2)
+
+  @@index([DoctorID], map: "DoctorID")
+  @@index([PatientID], map: "PatientID")
+}
+
+model patient {
+  PatientID Int            @id @default(autoincrement())
+  PatientNo Int            @unique(map: "PatientNo")
+  FullName  String         @db.VarChar(255)
+  DOB       DateTime       @db.Date
+  Gender    patient_Gender
+  Mobile    String         @db.VarChar(20)
+  Address   String         @db.VarChar(255)
+  UserID    Int?           @unique(map: "UserID")
+}
+
+model paymentmode {
+  PaymentModeID   Int     @id @default(autoincrement())
+  PaymentModeName String? @db.VarChar(100)
+}
+
+model role {
+  RoleID   Int    @id @default(autoincrement())
+  RoleName String @unique(map: "RoleName") @db.VarChar(50)
+}
+
+model service {
+  ServiceID       Int      @id @default(autoincrement())
+  TreatmentTypeID Int?
+  ServiceName     String?  @db.VarChar(255)
+  Rate            Decimal? @db.Decimal(10, 2)
+
+  @@index([TreatmentTypeID], map: "TreatmentTypeID")
+}
+
+model specialization {
+  SpecializationID   Int     @id @default(autoincrement())
+  SpecializationName String  @unique(map: "SpecializationName") @db.VarChar(255)
+  Description        String? @db.VarChar(255)
+}
+
+model treatmenttype {
+  TreatmentTypeID   Int     @id @default(autoincrement())
+  TreatmentTypeName String? @db.VarChar(255)
+}
+
+model user {
+  UserID    Int       @id @default(autoincrement())
+  Username  String    @unique(map: "Username") @db.VarChar(100)
+  Password  String    @db.VarChar(255)
+  RoleID    Int
+  CreatedAt DateTime? @default(now()) @db.DateTime(0)
+  UpdatedAt DateTime? @default(now()) @db.DateTime(0)
+  Mobile    String?   @unique(map: "Mobile") @db.VarChar(20)
+
+  @@index([RoleID], map: "RoleID")
+}
+
+enum appointment_Status {
+  Completed
+  Scheduled
+}
+
+enum patient_Gender {
+  Male
+  Female
+  Other
+}
+
+enum opdvisit_VisitType {
+  New
+  FollowUp
+}
