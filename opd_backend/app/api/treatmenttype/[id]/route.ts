@@ -4,18 +4,17 @@ import { handleError } from "@/middlewares/error.middleware";
 import { authorize } from "@/middlewares/role.middleware";
 import { success } from "@/utils/response";
 import { NextRequest } from "next/server";
-import { use } from "react";
 
-//getbtid
+//getbyid
 export async function GET(
     req: NextRequest,
     { params }: { params: Promise<{ id: number }> }
 ) {
     try {
-        const { id } = await params
-
         const user: any = authenticate(req)
         authorize(user, ["Admin", "Doctor"])
+
+        const { id } = await params
 
         const treatmenttype = await treatmenttypeService.getTreatmenttypeById(
             Number(id)
@@ -34,10 +33,10 @@ export async function PATCH(
     { params }: { params: Promise<{ id: number }> }
 ) {
     try {
-        const { id } = await params
-
         const user: any = authenticate(req)
         authorize(user, ["Admin"])
+
+        const { id } = await params
 
         const body = await req.json()
 
@@ -59,10 +58,10 @@ export async function DELETE(
     { params }: { params: Promise<{ id: number }> }
 ) {
     try {
-        const { id } = await params
-
         const user: any = authenticate(req);
         authorize(user, ["Admin"]);
+
+        const { id } = await params
 
         await treatmenttypeService.deleteTreatmenttype(
             Number(id)
