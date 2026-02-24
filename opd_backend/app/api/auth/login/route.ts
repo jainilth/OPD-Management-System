@@ -11,25 +11,25 @@ export async function POST(req: NextRequest) {
 
         if (!user) {
             return NextResponse.json(
-                { Message: "invalid credentials" },
+                { success: false, Message: "invalid credentials" },
                 { status: 401 }
             )
         }
 
         const valid = () => {
-            if (password == user.Password) return 1;
+            if (password === user.Password) return 1;
             else return 0
         }
 
-        if (!valid) return NextResponse.json(
-            { Message: "invalid credentials" },
+        if (!valid()) return NextResponse.json(
+            { success: false, Message: "invalid credentials" },
             { status: 401 }
         )
 
         const role = await prisma.role.findUnique({
             where: { RoleID: user?.RoleID },
-            select:{
-                RoleName:true
+            select: {
+                RoleName: true
             }
         })
 
@@ -50,15 +50,15 @@ export async function POST(req: NextRequest) {
             secure: false,
             sameSite: "lax",
             path: "/",   // VERY IMPORTANT
-            maxAge:60*60*24,
+            maxAge: 60 * 60 * 24,
 
         });
         return response
     }
     catch {
         return NextResponse.json(
-            { message: "Login Failed" },
-            { status: 500 }
+            { success: false, message: "Login Failed" },
+            { status: 500 },
         )
     }
 }
