@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllDoctors, CreateDoctor, UpdateDoctor, DeleteDoctor, GetAllDepartments, GetAllHospitals } from "@/app/service/opd.service";
+import { GetAllDoctors, CreateDoctor, UpdateDoctor, DeleteDoctor } from "@/app/service/doctor.service";
+import { GetAllDepartments } from "@/app/service/master.service";
+import { GetAllHospitals } from "@/app/service/hospital.service";
 
 export default function DoctorPage() {
   const [doctors, setDoctors] = useState<any[]>([]);

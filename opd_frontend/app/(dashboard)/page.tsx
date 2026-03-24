@@ -19,7 +19,10 @@ import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { GetAllPatients, GetAllDoctors, GetAllOPDVisits, GetAllInvoices } from "@/app/service/opd.service";
+import { GetAllPatients } from "@/app/service/patient.service";
+import { GetAllDoctors } from "@/app/service/doctor.service";
+import { GetAllOPDVisits } from "@/app/service/opdvisit.service";
+import { GetAllInvoices } from "@/app/service/invoice.service";
 
 const masterScreens = [
   { name: "Hospital", description: "Manage hospital profiles & charges", href: "/hospital", icon: Hospital, color: "from-blue-500 to-blue-600", bg: "bg-blue-50" },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Bell, Search, User, Menu, Loader2, FileText, UserRound, Building2, Stethoscope, Activity, Tag, ReceiptIndianRupee } from "lucide-react";
-import { GlobalSearch } from "@/app/service/opd.service";
+import { GlobalSearch } from "@/app/service/global-search.service";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 

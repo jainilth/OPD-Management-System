@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { GetDiagnosisTypeById } from "@/app/service/opd.service";
+import { GetDiagnosisTypeById } from "@/app/service/master.service";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ArrowLeft, Stethoscope, FileText } from "lucide-react";

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllInvoices, CreateInvoice, CreateInvoiceItem, GetAllOPDVisits, GetAllServices, GetAllPaymentModes } from "@/app/service/opd.service";
+import { GetAllInvoices, CreateInvoice, CreateInvoiceItem } from "@/app/service/invoice.service";
+import { GetAllOPDVisits } from "@/app/service/opdvisit.service";
+import { GetAllServices, GetAllPaymentModes } from "@/app/service/master.service";
 import { formatDate, formatCurrency } from "@/lib/utils";
 
 interface ItemForm { ServiceID: string; Quantity: number; Rate: number; Amount: number; }

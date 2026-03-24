@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { GetInvoiceById } from "@/app/service/opd.service";
+import { GetInvoiceById } from "@/app/service/invoice.service";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/Card";
 import { ArrowLeft, Printer, ReceiptIndianRupee, CreditCard, CalendarDays, ClipboardCheck, Tag } from "lucide-react";

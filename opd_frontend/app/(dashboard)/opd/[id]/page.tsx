@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { GetOPDVisitById } from "@/app/service/opd.service";
+import { GetOPDVisitById } from "@/app/service/opdvisit.service";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ArrowLeft, FileText, User, UserRound, Calendar, IndianRupee, Stethoscope } from "lucide-react";

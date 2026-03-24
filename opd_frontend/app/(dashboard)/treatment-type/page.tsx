@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllTreatmentTypes, CreateTreatmentType, UpdateTreatmentType, DeleteTreatmentType } from "@/app/service/opd.service";
+import { GetAllTreatmentTypes, CreateTreatmentType, UpdateTreatmentType, DeleteTreatmentType } from "@/app/service/master.service";
 
 export default function TreatmentTypePage() {
   const [items, setItems] = useState<any[]>([]);

@@ -10,7 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllHospitals, CreateHospital, UpdateHospital, DeleteHospital } from "@/app/service/opd.service";
+import { GetAllHospitals, CreateHospital, UpdateHospital, DeleteHospital } from "@/app/service/hospital.service";
 
 interface Hospital {
   HospitalID: number;

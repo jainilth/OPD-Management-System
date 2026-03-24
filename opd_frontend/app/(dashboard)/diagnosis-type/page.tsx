@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllDiagnosisTypes, CreateDiagnosisType, UpdateDiagnosisType, DeleteDiagnosisType } from "@/app/service/opd.service";
+import { GetAllDiagnosisTypes, CreateDiagnosisType, UpdateDiagnosisType, DeleteDiagnosisType } from "@/app/service/master.service";
 
 export default function DiagnosisTypePage() {
   const [items, setItems] = useState<any[]>([]);

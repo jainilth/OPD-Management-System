@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllOPDVisits, CreateOPDVisit, CreateOPDDiagnosis, GetAllPatients, GetAllDoctors, GetAllDiagnosisTypes } from "@/app/service/opd.service";
+import { GetAllOPDVisits, CreateOPDVisit, CreateOPDDiagnosis } from "@/app/service/opdvisit.service";
+import { GetAllPatients } from "@/app/service/patient.service";
+import { GetAllDoctors } from "@/app/service/doctor.service";
+import { GetAllDiagnosisTypes } from "@/app/service/master.service";
 import { formatDate } from "@/lib/utils";
 
 export default function OPDPage() {

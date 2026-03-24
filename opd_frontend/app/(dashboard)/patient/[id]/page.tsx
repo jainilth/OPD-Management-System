@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { GetPatientById } from "@/app/service/opd.service";
+import { GetPatientById } from "@/app/service/patient.service";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ArrowLeft, User, Calendar, MapPin, Phone, Users } from "lucide-react";
