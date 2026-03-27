@@ -10,13 +10,13 @@ export async function GetAllDepartments() {
 
 // ====== Diagnosis Type ======
 export async function GetAllDiagnosisTypes() {
-    return await authFetch('/api/diagnosistype')
+    return await authFetch('/api/diagnosis')
 }
 export async function GetDiagnosisTypeById(id: number) {
-    return await authFetch(`/api/diagnosistype/${id}`)
+    return await authFetch(`/api/diagnosis/${id}`)
 }
 export async function CreateDiagnosisType(data: any) {
-    const result = await authFetch('/api/diagnosistype', {
+    const result = await authFetch('/api/diagnosis', {
         method: 'POST',
         body: JSON.stringify(data),
     })
@@ -24,15 +24,15 @@ export async function CreateDiagnosisType(data: any) {
     return result
 }
 export async function UpdateDiagnosisType(id: number, data: any) {
-    const result = await authFetch(`/api/diagnosistype/${id}`, {
-        method: 'PUT',
+    const result = await authFetch(`/api/diagnosis/${id}`, {
+        method: 'PATCH',
         body: JSON.stringify(data),
     })
     revalidatePath('/diagnosis-type')
     return result
 }
 export async function DeleteDiagnosisType(id: number) {
-    const result = await authFetch(`/api/diagnosistype/${id}`, {
+    const result = await authFetch(`/api/diagnosis/${id}`, {
         method: 'DELETE',
     })
     revalidatePath('/diagnosis-type')

@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../app/generated/prisma"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 model appointment {
@@ -13,6 +15,9 @@ model appointment {
   PatientID           Int?
   DoctorID            Int?
   Status              appointment_Status?
+
+  patient patient? @relation(fields: [PatientID], references: [PatientID])
+  doctor  doctor?  @relation(fields: [DoctorID], references: [DoctorID])
 
   @@index([DoctorID], map: "DoctorID")
   @@index([PatientID], map: "PatientID")
@@ -23,6 +28,9 @@ model department {
   DepartmentName String @db.VarChar(255)
   HospitalID     Int?
 
+  hospital hospital? @relation(fields: [HospitalID], references: [HospitalID])
+  doctors  doctor[]
+
   @@index([HospitalID], map: "HospitalID")
 }
 
@@ -30,6 +38,8 @@ model diagnosis {
   DiagnosisID   Int     @id @default(autoincrement())
   DiagnosisName String? @db.VarChar(255)
   ICDCode       String? @db.VarChar(50)
+
+  opddiagnoses opddiagnosis[]
 }
 
 model doctor {
@@ -41,6 +51,14 @@ model doctor {
   UserID          Int?     @unique(map: "UserID")
   photourl        String?  @db.VarChar(100)
   Mobile          String?  @unique(map: "Mobile_UNIQUE") @db.VarChar(20)
+
+  department department @relation(fields: [DepartmentID], references: [DepartmentID])
+  hospital   hospital?  @relation(fields: [HospitalID], references: [HospitalID])
+  user       user?      @relation(fields: [UserID], references: [UserID])
+
+  appointments          appointment[]
+  doctorspecializations doctorspecialization[]
+  opdvisits             opdvisit[]
 
   @@index([DepartmentID], map: "DepartmentID")
   @@index([HospitalID], map: "HospitalID")
@@ -54,6 +72,9 @@ model doctorspecialization {
   IsPrimary              Boolean?  @default(false)
   CreatedAt              DateTime? @default(now()) @db.DateTime(0)
 
+  doctor         doctor         @relation(fields: [DoctorID], references: [DoctorID])
+  specialization specialization @relation(fields: [SpecializationID], references: [SpecializationID])
+
   @@unique([DoctorID, SpecializationID], map: "DoctorID")
   @@index([SpecializationID], map: "SpecializationID")
 }
@@ -65,6 +86,9 @@ model hospital {
   OpeningDate        DateTime? @db.Date
   Address            String?   @db.VarChar(255)
   ContactInfo        String?   @db.VarChar(100)
+
+  departments department[]
+  doctors     doctor[]
 }
 
 model invoice {
@@ -74,6 +98,11 @@ model invoice {
   InvoiceDate   DateTime? @db.DateTime(0)
   TotalAmount   Decimal?  @db.Decimal(10, 2)
   PaymentModeID Int?
+
+  opdvisit    opdvisit?    @relation(fields: [OPDID], references: [OPDID])
+  paymentmode paymentmode? @relation(fields: [PaymentModeID], references: [PaymentModeID])
+
+  invoiceitems invoiceitem[]
 
   @@index([OPDID], map: "OPDID")
   @@index([PaymentModeID], map: "PaymentModeID")
@@ -87,6 +116,9 @@ model invoiceitem {
   Rate          Decimal? @db.Decimal(10, 2)
   Amount        Decimal? @db.Decimal(10, 2)
 
+  invoice invoice? @relation(fields: [InvoiceID], references: [InvoiceID])
+  service service? @relation(fields: [ServiceID], references: [ServiceID])
+
   @@index([InvoiceID], map: "InvoiceID")
   @@index([ServiceID], map: "ServiceID")
 }
@@ -95,6 +127,9 @@ model opddiagnosis {
   OPDDiagnosisID Int  @id @default(autoincrement())
   OPDID          Int?
   DiagnosisID    Int?
+
+  opdvisit  opdvisit?  @relation(fields: [OPDID], references: [OPDID])
+  diagnosis diagnosis? @relation(fields: [DiagnosisID], references: [DiagnosisID])
 
   @@index([DiagnosisID], map: "DiagnosisID")
   @@index([OPDID], map: "OPDID")
@@ -109,6 +144,12 @@ model opdvisit {
   VisitType       opdvisit_VisitType?
   RegistrationFee Decimal?            @db.Decimal(10, 2)
 
+  patient patient? @relation(fields: [PatientID], references: [PatientID])
+  doctor  doctor?  @relation(fields: [DoctorID], references: [DoctorID])
+
+  invoices     invoice[]
+  opddiagnoses opddiagnosis[]
+
   @@index([DoctorID], map: "DoctorID")
   @@index([PatientID], map: "PatientID")
 }
@@ -122,16 +163,25 @@ model patient {
   Mobile    String         @db.VarChar(20)
   Address   String         @db.VarChar(255)
   UserID    Int?           @unique(map: "UserID")
+
+  user user? @relation(fields: [UserID], references: [UserID])
+
+  appointments appointment[]
+  opdvisits    opdvisit[]
 }
 
 model paymentmode {
   PaymentModeID   Int     @id @default(autoincrement())
   PaymentModeName String? @db.VarChar(100)
+
+  invoices invoice[]
 }
 
 model role {
   RoleID   Int    @id @default(autoincrement())
   RoleName String @unique(map: "RoleName") @db.VarChar(50)
+
+  users user[]
 }
 
 model service {
@@ -140,6 +190,10 @@ model service {
   ServiceName     String?  @db.VarChar(255)
   Rate            Decimal? @db.Decimal(10, 2)
 
+  treatmenttype treatmenttype? @relation(fields: [TreatmentTypeID], references: [TreatmentTypeID])
+
+  invoiceitems invoiceitem[]
+
   @@index([TreatmentTypeID], map: "TreatmentTypeID")
 }
 
@@ -147,11 +201,15 @@ model specialization {
   SpecializationID   Int     @id @default(autoincrement())
   SpecializationName String  @unique(map: "SpecializationName") @db.VarChar(255)
   Description        String? @db.VarChar(255)
+
+  doctorspecializations doctorspecialization[]
 }
 
 model treatmenttype {
   TreatmentTypeID   Int     @id @default(autoincrement())
   TreatmentTypeName String? @db.VarChar(255)
+
+  services service[]
 }
 
 model user {
@@ -162,6 +220,11 @@ model user {
   CreatedAt DateTime? @default(now()) @db.DateTime(0)
   UpdatedAt DateTime? @default(now()) @db.DateTime(0)
   Mobile    String?   @unique(map: "Mobile") @db.VarChar(20)
+
+  role role @relation(fields: [RoleID], references: [RoleID])
+
+  doctor  doctor?
+  patient patient?
 
   @@index([RoleID], map: "RoleID")
 }
