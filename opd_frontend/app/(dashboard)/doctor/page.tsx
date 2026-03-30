@@ -19,7 +19,8 @@ export default function DoctorPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [formData, setFormData] = useState({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "" });
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [formData, setFormData] = useState({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
 
   const fetchData = async () => {
     setLoading(true);
@@ -35,17 +36,25 @@ export default function DoctorPage() {
   const handleOpenModal = (doc?: any) => {
     if (doc) {
       setEditing(doc);
-      setFormData({ DoctorName: doc.DoctorName, DepartmentID: String(doc.DepartmentID), ConsultationFee: String(doc.ConsultationFee), HospitalID: String(doc.HospitalID || ""), Mobile: doc.Mobile || "" });
+      setIsNewUser(false);
+      setFormData({ DoctorName: doc.DoctorName, DepartmentID: String(doc.DepartmentID), ConsultationFee: String(doc.ConsultationFee), HospitalID: String(doc.HospitalID || ""), Mobile: doc.Mobile || "", Username: "", Password: "" });
     } else {
       setEditing(null);
-      setFormData({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "" });
+      setIsNewUser(false);
+      setFormData({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
     }
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...formData, DepartmentID: parseInt(formData.DepartmentID), ConsultationFee: parseFloat(formData.ConsultationFee), HospitalID: formData.HospitalID ? parseInt(formData.HospitalID) : undefined };
+    const payload: any = { ...formData, DepartmentID: parseInt(formData.DepartmentID), ConsultationFee: parseFloat(formData.ConsultationFee), HospitalID: formData.HospitalID ? parseInt(formData.HospitalID) : undefined };
+    
+    if (!isNewUser) {
+        delete payload.Username;
+        delete payload.Password;
+    }
+
     if (editing) { await UpdateDoctor(editing.DoctorID, payload); } else { await CreateDoctor(payload); }
     setIsModalOpen(false);
     fetchData();
@@ -83,6 +92,21 @@ export default function DoctorPage() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Doctor" : "Add Doctor"}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!editing && (
+            <div className="space-y-2 p-3 bg-slate-50 border border-slate-100 rounded-lg">
+              <label className="text-sm font-semibold text-slate-700">Assign to User</label>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                  <input type="radio" checked={!isNewUser} onChange={() => setIsNewUser(false)} className="w-4 h-4 text-blue-500 focus:ring-blue-500 border-slate-300" />
+                  Existing User
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                  <input type="radio" checked={isNewUser} onChange={() => setIsNewUser(true)} className="w-4 h-4 text-blue-500 focus:ring-blue-500 border-slate-300" />
+                  New User
+                </label>
+              </div>
+            </div>
+          )}
           <Input label="Doctor Name" value={formData.DoctorName} onChange={(e) => setFormData({ ...formData, DoctorName: e.target.value })} required />
           <div className="space-y-1.5"><label className="text-sm font-semibold text-slate-700">Department</label>
             <select className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.DepartmentID} onChange={(e) => setFormData({ ...formData, DepartmentID: e.target.value })} required>
@@ -97,7 +121,13 @@ export default function DoctorPage() {
               {hospitals.map((h: any) => (<option key={h.HospitalID} value={h.HospitalID}>{h.HospitalName}</option>))}
             </select>
           </div>
-          <Input label="Mobile" value={formData.Mobile} onChange={(e) => setFormData({ ...formData, Mobile: e.target.value })} />
+          <Input label="Mobile" value={formData.Mobile} onChange={(e) => setFormData({ ...formData, Mobile: e.target.value })} required />
+          {!editing && isNewUser && (
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+              <Input label="Username" value={formData.Username} onChange={(e) => setFormData({ ...formData, Username: e.target.value })} required />
+              <Input type="password" label="Password" value={formData.Password} onChange={(e) => setFormData({ ...formData, Password: e.target.value })} required />
+            </div>
+          )}
           <div className="flex justify-end gap-3"><Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button type="submit">{editing ? "Update" : "Create"}</Button></div>
         </form>
       </Modal>

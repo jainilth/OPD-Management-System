@@ -31,6 +31,7 @@ const menuGroups: MenuGroup[] = [
       { name: "Diagnosis Type", icon: "Stethoscope", href: "/diagnosis-type", roles: ["Admin", "Doctor"] },
       { name: "Treatment Type", icon: "Layers", href: "/treatment-type", roles: ["Admin"] },
       { name: "Sub Treatment", icon: "ListTree", href: "/sub-treatment-type", roles: ["Admin"] },
+      { name: "User Master", icon: "Users", href: "/user", roles: ["Admin"] },
     ],
   },
   {
@@ -49,7 +50,9 @@ export async function Sidebar() {
   const filteredGroups = menuGroups
     .map(group => ({
       ...group,
-      items: group.items, // Show all items
+      items: group.items.filter(item => 
+        !item.roles || (session?.role && item.roles.includes(session.role))
+      ),
     }))
     .filter(group => group.items.length > 0);
 

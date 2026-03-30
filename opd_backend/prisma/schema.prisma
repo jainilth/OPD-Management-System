@@ -160,7 +160,7 @@ model patient {
   FullName  String         @db.VarChar(255)
   DOB       DateTime       @db.Date
   Gender    patient_Gender
-  Mobile    String         @db.VarChar(20)
+  Mobile    String         @unique(map: "Mobile_Patient_UNIQUE") @db.VarChar(20)
   Address   String         @db.VarChar(255)
   UserID    Int?           @unique(map: "UserID")
 

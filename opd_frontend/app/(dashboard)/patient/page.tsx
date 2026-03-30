@@ -16,7 +16,8 @@ export default function PatientPage() {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [formData, setFormData] = useState({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "" });
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [formData, setFormData] = useState({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "", Username: "", Password: "" });
 
   const fetchData = async () => { setLoading(true); const data = await GetAllPatients(); if (!data?.error) setPatients(Array.isArray(data) ? data : []); setLoading(false); };
   useEffect(() => { fetchData(); }, []);
@@ -26,14 +27,21 @@ export default function PatientPage() {
   );
 
   const handleOpenModal = (patient?: any) => {
-    if (patient) { setEditing(patient); setFormData({ FullName: patient.FullName, DOB: patient.DOB?.split("T")[0] || "", Gender: patient.Gender, Mobile: patient.Mobile, Address: patient.Address }); }
-    else { setEditing(null); setFormData({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "" }); }
+    if (patient) { setEditing(patient); setIsNewUser(false); setFormData({ FullName: patient.FullName, DOB: patient.DOB?.split("T")[0] || "", Gender: patient.Gender, Mobile: patient.Mobile, Address: patient.Address, Username: "", Password: "" }); }
+    else { setEditing(null); setIsNewUser(false); setFormData({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "", Username: "", Password: "" }); }
     setIsModalOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editing) { await UpdatePatient(editing.PatientID, formData); } else { await CreatePatient(formData); }
+    const payload: any = { ...formData };
+    
+    if (!isNewUser) {
+        delete payload.Username;
+        delete payload.Password;
+    }
+
+    if (editing) { await UpdatePatient(editing.PatientID, payload); } else { await CreatePatient(payload); }
     setIsModalOpen(false); fetchData();
   };
 
@@ -64,6 +72,21 @@ export default function PatientPage() {
       </CardContent></Card>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Patient" : "New Patient"}>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!editing && (
+            <div className="space-y-2 p-3 bg-slate-50 border border-slate-100 rounded-lg">
+              <label className="text-sm font-semibold text-slate-700">Assign to User</label>
+              <div className="flex items-center gap-6">
+                <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                  <input type="radio" checked={!isNewUser} onChange={() => setIsNewUser(false)} className="w-4 h-4 text-blue-500 focus:ring-blue-500 border-slate-300" />
+                  Existing User
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                  <input type="radio" checked={isNewUser} onChange={() => setIsNewUser(true)} className="w-4 h-4 text-blue-500 focus:ring-blue-500 border-slate-300" />
+                  New User
+                </label>
+              </div>
+            </div>
+          )}
           <Input label="Full Name" value={formData.FullName} onChange={(e) => setFormData({ ...formData, FullName: e.target.value })} required />
           <Input label="Date of Birth" type="date" value={formData.DOB} onChange={(e) => setFormData({ ...formData, DOB: e.target.value })} required />
           <div className="space-y-1.5"><label className="text-sm font-semibold text-slate-700">Gender</label>
@@ -73,6 +96,12 @@ export default function PatientPage() {
           </div>
           <Input label="Mobile" value={formData.Mobile} onChange={(e) => setFormData({ ...formData, Mobile: e.target.value })} required />
           <Input label="Address" value={formData.Address} onChange={(e) => setFormData({ ...formData, Address: e.target.value })} required />
+          {!editing && isNewUser && (
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+              <Input label="Username" value={formData.Username} onChange={(e) => setFormData({ ...formData, Username: e.target.value })} required />
+              <Input type="password" label="Password" value={formData.Password} onChange={(e) => setFormData({ ...formData, Password: e.target.value })} required />
+            </div>
+          )}
           <div className="flex justify-end gap-3"><Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button type="submit">{editing ? "Update" : "Register"}</Button></div>
         </form>
       </Modal>

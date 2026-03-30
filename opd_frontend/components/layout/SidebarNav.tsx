@@ -12,6 +12,7 @@ import {
   ClipboardList,
   ReceiptIndianRupee,
   LayoutDashboard,
+  Users,
   ChevronRight,
   ChevronDown,
   LucideIcon
@@ -29,6 +30,7 @@ const iconMap: Record<string, LucideIcon> = {
   UserPlus,
   ClipboardList,
   ReceiptIndianRupee,
+  Users,
 };
 
 interface MenuItem {
