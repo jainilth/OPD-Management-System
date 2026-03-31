@@ -9,8 +9,14 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllServices, CreateService, UpdateService, DeleteService, GetAllTreatmentTypes } from "@/app/service/master.service";
+import { useRole } from "@/context/RoleContext";
+import { hasRole } from "@/lib/rbac";
 
 export default function SubTreatmentTypePage() {
+  const { role } = useRole();
+  const canAddEdit = hasRole(role, ["Admin", "Doctor", "Receptionist"]);
+  const canDelete = hasRole(role, ["Admin"]);
+
   const [items, setItems] = useState<any[]>([]);
   const [treatmentTypes, setTreatmentTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +34,8 @@ export default function SubTreatmentTypePage() {
   useEffect(() => { fetchData(); }, []);
 
   const handleOpenModal = (item?: any) => {
+    if (!canAddEdit) return;
+
     if (item) { setEditing(item); setFormData({ ServiceName: item.ServiceName, TreatmentTypeID: String(item.TreatmentTypeID), Rate: String(item.Rate) }); }
     else { setEditing(null); setFormData({ ServiceName: "", TreatmentTypeID: "", Rate: "" }); }
     setIsModalOpen(true);
@@ -35,18 +43,23 @@ export default function SubTreatmentTypePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canAddEdit) return;
+
     const payload = { ServiceName: formData.ServiceName, TreatmentTypeID: parseInt(formData.TreatmentTypeID), Rate: parseFloat(formData.Rate) };
     if (editing) { await UpdateService(editing.ServiceID, payload); } else { await CreateService(payload); }
     setIsModalOpen(false); fetchData();
   };
 
-  const handleDelete = async (id: number) => { if (confirm("Are you sure?")) { await DeleteService(id); fetchData(); } };
+  const handleDelete = async (id: number) => {
+    if (!canDelete) return;
+    if (confirm("Are you sure?")) { await DeleteService(id); fetchData(); }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold text-slate-800">Sub Treatment Type</h1><p className="text-slate-500">Manage billable services</p></div>
-        <Button onClick={() => handleOpenModal()} className="gap-2"><Plus className="h-4 w-4" /> Add Service</Button>
+        {canAddEdit && <Button onClick={() => handleOpenModal()} className="gap-2"><Plus className="h-4 w-4" /> Add Service</Button>}
       </div>
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>Service Name</TableHead><TableHead>Treatment Type</TableHead><TableHead>Rate</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
@@ -57,14 +70,14 @@ export default function SubTreatmentTypePage() {
                   <Link href={`/sub-treatment-type/${s.ServiceID}`}>
                     <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenModal(s)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(s.ServiceID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                  {canAddEdit && <Button variant="ghost" size="icon" onClick={() => handleOpenModal(s)}><Pencil className="h-4 w-4" /></Button>}
+                  {canDelete && <Button variant="ghost" size="icon" onClick={() => handleDelete(s.ServiceID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
                 </TableCell></TableRow>))
             )}
           </TableBody>
         </Table>
       </CardContent></Card>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Service" : "Add Service"}>
+      <Modal isOpen={isModalOpen && canAddEdit} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Service" : "Add Service"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label="Service Name" value={formData.ServiceName} onChange={(e) => setFormData({ ...formData, ServiceName: e.target.value })} required />
           <div className="space-y-1.5"><label className="text-sm font-semibold text-slate-700">Treatment Type</label>

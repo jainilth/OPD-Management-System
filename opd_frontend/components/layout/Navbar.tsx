@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, Search, User, Menu, Loader2, FileText, UserRound, Building2, Stethoscope, Activity, Tag, ReceiptIndianRupee } from "lucide-react";
+import { Bell, Search, User, Menu, Loader2, FileText, UserRound, Building2, Stethoscope, Activity, Tag, ReceiptIndianRupee, Building, BadgePlus, WalletCards, ShieldCheck, Users } from "lucide-react";
 import { GlobalSearch } from "@/app/service/global-search.service";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -11,7 +11,8 @@ export function Navbar() {
   const [results, setResults] = useState<{
     patients: any[], doctors: any[], visits: any[], 
     hospitals: any[], diagnoses: any[], treatments: any[], 
-    services: any[], receipts: any[]
+    services: any[], receipts: any[], departments: any[],
+    specializations: any[], paymentModes: any[], users: any[], roles: any[]
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +54,9 @@ export function Navbar() {
   const hasResults = results && (
     results.patients.length > 0 || results.doctors.length > 0 || results.visits.length > 0 ||
     results.hospitals.length > 0 || results.diagnoses.length > 0 || results.treatments.length > 0 ||
-    results.services.length > 0 || results.receipts.length > 0
+    results.services.length > 0 || results.receipts.length > 0 || results.departments.length > 0 ||
+    results.specializations.length > 0 || results.paymentModes.length > 0 || results.users.length > 0 ||
+    results.roles.length > 0
   );
 
   return (
@@ -191,6 +194,76 @@ export function Navbar() {
                               <Link href={`/sub-treatment-type/${s.ServiceID}`} key={`serv-${s.ServiceID}`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
                                 <div className="h-8 w-8 rounded-lg bg-teal-100 flex items-center justify-center shrink-0"><Tag className="h-4 w-4 text-teal-600" /></div>
                                 <div className="flex-1 min-w-0"><p className="font-bold text-slate-900 truncate">{s.ServiceName}</p><p className="text-xs text-slate-500">{formatCurrency(s.Rate)}</p></div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {results.departments.length > 0 && (
+                        <div>
+                          <p className="px-3 text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Departments</p>
+                          <div className="space-y-1">
+                            {results.departments.map((d) => (
+                              <Link href="/department" key={`dep-${d.DepartmentID}`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div className="h-8 w-8 rounded-lg bg-cyan-100 flex items-center justify-center shrink-0"><Building className="h-4 w-4 text-cyan-600" /></div>
+                                <div className="flex-1 min-w-0"><p className="font-bold text-slate-900 truncate">{d.DepartmentName}</p><p className="text-xs text-slate-500">{d.hospital?.HospitalName || 'No Hospital'}</p></div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {results.specializations.length > 0 && (
+                        <div>
+                          <p className="px-3 text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Specializations</p>
+                          <div className="space-y-1">
+                            {results.specializations.map((s) => (
+                              <Link href="/specialization" key={`sp-${s.SpecializationID}`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div className="h-8 w-8 rounded-lg bg-violet-100 flex items-center justify-center shrink-0"><BadgePlus className="h-4 w-4 text-violet-600" /></div>
+                                <div className="flex-1 min-w-0"><p className="font-bold text-slate-900 truncate">{s.SpecializationName}</p><p className="text-xs text-slate-500">{s.Description || 'No description'}</p></div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {results.paymentModes.length > 0 && (
+                        <div>
+                          <p className="px-3 text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Payment Modes</p>
+                          <div className="space-y-1">
+                            {results.paymentModes.map((pm) => (
+                              <Link href="/payment-mode" key={`pm-${pm.PaymentModeID}`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0"><WalletCards className="h-4 w-4 text-amber-600" /></div>
+                                <div className="flex-1 min-w-0"><p className="font-bold text-slate-900 truncate">{pm.PaymentModeName}</p></div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {results.users.length > 0 && (
+                        <div>
+                          <p className="px-3 text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Users</p>
+                          <div className="space-y-1">
+                            {results.users.map((u) => (
+                              <Link href="/user" key={`usr-${u.UserID}`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div className="h-8 w-8 rounded-lg bg-sky-100 flex items-center justify-center shrink-0"><Users className="h-4 w-4 text-sky-600" /></div>
+                                <div className="flex-1 min-w-0"><p className="font-bold text-slate-900 truncate">{u.Username}</p><p className="text-xs text-slate-500">{u.role?.RoleName || 'No Role'} • {u.Mobile || 'No Mobile'}</p></div>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {results.roles.length > 0 && (
+                        <div>
+                          <p className="px-3 text-[10px] font-black tracking-widest text-slate-400 uppercase mb-2">Roles</p>
+                          <div className="space-y-1">
+                            {results.roles.map((r) => (
+                              <Link href="/role" key={`role-${r.RoleID}`} onClick={() => setIsOpen(false)} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition-colors">
+                                <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0"><ShieldCheck className="h-4 w-4 text-emerald-600" /></div>
+                                <div className="flex-1 min-w-0"><p className="font-bold text-slate-900 truncate">{r.RoleName}</p></div>
                               </Link>
                             ))}
                           </div>

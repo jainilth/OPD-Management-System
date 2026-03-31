@@ -12,7 +12,7 @@ export async function GET(
 ) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor", "Patient"])
+        authorize(user, ["Admin", "Doctor", "Patient", "Receptionist"])
 
         const { id } = await params
 
@@ -31,7 +31,7 @@ export async function PATCH(
 ) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Doctor", "Receptionist"])
 
         const { id } = await params
 

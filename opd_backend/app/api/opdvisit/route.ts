@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor", "Patient"])
+        authorize(user, ["Admin", "Doctor", "Patient", "Receptionist"])
 
         const opdvisit = await opdvisitService.getOpdvisit()
         return success(opdvisit)
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Doctor", "Receptionist"])
 
         const body = await req.json()
         const opdvisit = await opdvisitService.createOpdvisit(body)

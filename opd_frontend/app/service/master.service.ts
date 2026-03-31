@@ -7,6 +7,32 @@ import { authFetch } from '@/app/service/base.service'
 export async function GetAllDepartments() {
     return await authFetch('/api/department')
 }
+export async function GetDepartmentById(id: number) {
+    return await authFetch(`/api/department/${id}`)
+}
+export async function CreateDepartment(data: any) {
+    const result = await authFetch('/api/department', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/department')
+    return result
+}
+export async function UpdateDepartment(id: number, data: any) {
+    const result = await authFetch(`/api/department/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/department')
+    return result
+}
+export async function DeleteDepartment(id: number) {
+    const result = await authFetch(`/api/department/${id}`, {
+        method: 'DELETE',
+    })
+    revalidatePath('/department')
+    return result
+}
 
 // ====== Diagnosis Type ======
 export async function GetAllDiagnosisTypes() {
@@ -104,4 +130,61 @@ export async function DeleteService(id: number) {
 // ====== Payment Mode ======
 export async function GetAllPaymentModes() {
     return await authFetch('/api/paymentmode')
+}
+export async function GetPaymentModeById(id: number) {
+    return await authFetch(`/api/paymentmode/${id}`)
+}
+export async function CreatePaymentMode(data: any) {
+    const result = await authFetch('/api/paymentmode', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/payment-mode')
+    return result
+}
+export async function UpdatePaymentMode(id: number, data: any) {
+    const result = await authFetch(`/api/paymentmode/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/payment-mode')
+    return result
+}
+export async function DeletePaymentMode(id: number) {
+    const result = await authFetch(`/api/paymentmode/${id}`, {
+        method: 'DELETE',
+    })
+    revalidatePath('/payment-mode')
+    return result
+}
+
+// ====== Specialization ======
+export async function GetAllSpecializations() {
+    return await authFetch('/api/specialization')
+}
+export async function GetSpecializationById(id: number) {
+    return await authFetch(`/api/specialization/${id}`)
+}
+export async function CreateSpecialization(data: any) {
+    const result = await authFetch('/api/specialization', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/specialization')
+    return result
+}
+export async function UpdateSpecialization(id: number, data: any) {
+    const result = await authFetch(`/api/specialization/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/specialization')
+    return result
+}
+export async function DeleteSpecialization(id: number) {
+    const result = await authFetch(`/api/specialization/${id}`, {
+        method: 'DELETE',
+    })
+    revalidatePath('/specialization')
+    return result
 }

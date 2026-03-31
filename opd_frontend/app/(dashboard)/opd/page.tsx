@@ -12,8 +12,13 @@ import { GetAllPatients } from "@/app/service/patient.service";
 import { GetAllDoctors } from "@/app/service/doctor.service";
 import { GetAllDiagnosisTypes } from "@/app/service/master.service";
 import { formatDate } from "@/lib/utils";
+import { useRole } from "@/context/RoleContext";
+import { hasRole } from "@/lib/rbac";
 
 export default function OPDPage() {
+  const { role } = useRole();
+  const canCreate = hasRole(role, ["Admin", "Doctor", "Receptionist"]);
+
   const [visits, setVisits] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -44,6 +49,8 @@ export default function OPDPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreate) return;
+
     const visitResult = await CreateOPDVisit({
       PatientID: parseInt(formData.PatientID),
       DoctorID: parseInt(formData.DoctorID),
@@ -67,7 +74,7 @@ export default function OPDPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold text-slate-800">OPD Entry</h1><p className="text-slate-500">Record outpatient visits</p></div>
-        <Button onClick={() => setIsModalOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New OPD Entry</Button>
+        {canCreate && <Button onClick={() => setIsModalOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> New OPD Entry</Button>}
       </div>
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>OPD No</TableHead><TableHead>Date</TableHead><TableHead>Patient</TableHead><TableHead>Doctor</TableHead><TableHead>Visit Type</TableHead><TableHead>Fee</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
@@ -86,7 +93,7 @@ export default function OPDPage() {
         </Table>
       </CardContent></Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="New OPD Entry" description="Register a new outpatient visit">
+      <Modal isOpen={isModalOpen && canCreate} onClose={() => setIsModalOpen(false)} title="New OPD Entry" description="Register a new outpatient visit">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5"><label className="text-sm font-semibold text-slate-700">Patient</label>
             <select className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.PatientID} onChange={(e) => setFormData({ ...formData, PatientID: e.target.value })} required>

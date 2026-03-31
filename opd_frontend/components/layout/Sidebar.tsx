@@ -27,10 +27,14 @@ const menuGroups: MenuGroup[] = [
     label: "Masters",
     items: [
       { name: "Hospital", icon: "Hospital", href: "/hospital", roles: ["Admin"] },
-      { name: "Doctor", icon: "UserRound", href: "/doctor", roles: ["Admin"] },
-      { name: "Diagnosis Type", icon: "Stethoscope", href: "/diagnosis-type", roles: ["Admin", "Doctor"] },
-      { name: "Treatment Type", icon: "Layers", href: "/treatment-type", roles: ["Admin"] },
-      { name: "Sub Treatment", icon: "ListTree", href: "/sub-treatment-type", roles: ["Admin"] },
+      { name: "Department", icon: "Building2", href: "/department", roles: ["Admin", "Receptionist"] },
+      { name: "Doctor", icon: "UserRound", href: "/doctor", roles: ["Admin", "Receptionist", "Doctor"] },
+      { name: "Specialization", icon: "BadgePlus", href: "/specialization", roles: ["Admin"] },
+      { name: "Diagnosis Type", icon: "Stethoscope", href: "/diagnosis-type", roles: ["Admin", "Doctor", "Receptionist"] },
+      { name: "Treatment Type", icon: "Layers", href: "/treatment-type", roles: ["Admin", "Doctor", "Receptionist"] },
+      { name: "Sub Treatment", icon: "ListTree", href: "/sub-treatment-type", roles: ["Admin", "Doctor", "Receptionist"] },
+      { name: "Payment Mode", icon: "WalletCards", href: "/payment-mode", roles: ["Admin", "Receptionist"] },
+      { name: "Role Master", icon: "ShieldCheck", href: "/role", roles: ["Admin"] },
       { name: "User Master", icon: "Users", href: "/user", roles: ["Admin"] },
     ],
   },
@@ -39,7 +43,7 @@ const menuGroups: MenuGroup[] = [
     items: [
       { name: "Patient Reg", icon: "UserPlus", href: "/patient", roles: ["Admin", "Doctor", "Receptionist"] },
       { name: "OPD Entry", icon: "ClipboardList", href: "/opd", roles: ["Admin", "Doctor", "Receptionist"] },
-      { name: "Receipt Entry", icon: "ReceiptIndianRupee", href: "/receipt", roles: ["Admin", "Receptionist", "Billing"] },
+      { name: "Receipt Entry", icon: "ReceiptIndianRupee", href: "/receipt", roles: ["Admin", "Doctor", "Receptionist"] },
     ],
   },
 ];

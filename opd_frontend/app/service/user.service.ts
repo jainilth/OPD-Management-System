@@ -58,3 +58,33 @@ export async function DeleteUser(id: number) {
 export async function GetAllRoles() {
     return await authFetch('/api/role')
 }
+
+export async function GetRoleById(id: number) {
+    return await authFetch(`/api/role/${id}`)
+}
+
+export async function CreateRole(data: any) {
+    const result = await authFetch('/api/role', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/role')
+    return result
+}
+
+export async function UpdateRole(id: number, data: any) {
+    const result = await authFetch(`/api/role/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/role')
+    return result
+}
+
+export async function DeleteRole(id: number) {
+    const result = await authFetch(`/api/role/${id}`, {
+        method: 'DELETE',
+    })
+    revalidatePath('/role')
+    return result
+}

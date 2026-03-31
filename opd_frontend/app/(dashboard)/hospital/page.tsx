@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllHospitals, CreateHospital, UpdateHospital, DeleteHospital } from "@/app/service/hospital.service";
+import { useRole } from "@/context/RoleContext";
+import { hasRole } from "@/lib/rbac";
 
 interface Hospital {
   HospitalID: number;
@@ -22,6 +24,9 @@ interface Hospital {
 }
 
 export default function HospitalPage() {
+  const { role } = useRole();
+  const canManage = hasRole(role, ["Admin"]);
+
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,6 +45,8 @@ export default function HospitalPage() {
   useEffect(() => { fetchData(); }, []);
 
   const handleOpenModal = (hospital?: Hospital) => {
+    if (!canManage) return;
+
     if (hospital) {
       setEditing(hospital);
       setFormData({
@@ -58,6 +65,8 @@ export default function HospitalPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManage) return;
+
     const payload = { ...formData, RegistrationCharge: parseFloat(formData.RegistrationCharge) };
     if (editing) {
       await UpdateHospital(editing.HospitalID, payload);
@@ -69,6 +78,8 @@ export default function HospitalPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (!canManage) return;
+
     if (confirm("Are you sure?")) {
       await DeleteHospital(id);
       fetchData();
@@ -82,9 +93,11 @@ export default function HospitalPage() {
           <h1 className="text-3xl font-bold text-slate-800">Hospital Master</h1>
           <p className="text-slate-500">Manage hospital information</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="gap-2">
-          <Plus className="h-4 w-4" /> Add Hospital
-        </Button>
+        {canManage && (
+          <Button onClick={() => handleOpenModal()} className="gap-2">
+            <Plus className="h-4 w-4" /> Add Hospital
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -117,8 +130,8 @@ export default function HospitalPage() {
                       <Link href={`/hospital/${h.HospitalID}`}>
                         <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
                       </Link>
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal(h)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(h.HospitalID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                      {canManage && <Button variant="ghost" size="icon" onClick={() => handleOpenModal(h)}><Pencil className="h-4 w-4" /></Button>}
+                      {canManage && <Button variant="ghost" size="icon" onClick={() => handleDelete(h.HospitalID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
                     </TableCell>
                   </TableRow>
                 ))
@@ -128,7 +141,7 @@ export default function HospitalPage() {
         </CardContent>
       </Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Hospital" : "Add Hospital"}>
+      <Modal isOpen={isModalOpen && canManage} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Hospital" : "Add Hospital"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label="Hospital Name" value={formData.HospitalName} onChange={(e) => setFormData({ ...formData, HospitalName: e.target.value })} required />
           <Input label="Registration Charge" type="number" value={formData.RegistrationCharge} onChange={(e) => setFormData({ ...formData, RegistrationCharge: e.target.value })} required />

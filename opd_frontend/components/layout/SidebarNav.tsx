@@ -4,7 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Hospital,
+  Building2,
+  BadgePlus,
   UserRound,
+  ShieldCheck,
+  WalletCards,
   Stethoscope,
   Layers,
   ListTree,
@@ -23,7 +27,11 @@ import { useState } from "react";
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
   Hospital,
+  Building2,
+  BadgePlus,
   UserRound,
+  ShieldCheck,
+  WalletCards,
   Stethoscope,
   Layers,
   ListTree,

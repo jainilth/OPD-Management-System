@@ -53,7 +53,7 @@ export async function DELETE(
 ) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin"])
+        authorize(user, ["Admin", "Receptionist"])
 
         const { id } = await params
 

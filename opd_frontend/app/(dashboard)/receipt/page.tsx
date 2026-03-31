@@ -11,10 +11,15 @@ import { GetAllInvoices, CreateInvoice, CreateInvoiceItem } from "@/app/service/
 import { GetAllOPDVisits } from "@/app/service/opdvisit.service";
 import { GetAllServices, GetAllPaymentModes } from "@/app/service/master.service";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { useRole } from "@/context/RoleContext";
+import { hasRole } from "@/lib/rbac";
 
 interface ItemForm { ServiceID: string; Quantity: number; Rate: number; Amount: number; }
 
 export default function ReceiptPage() {
+  const { role } = useRole();
+  const canCreate = hasRole(role, ["Admin", "Receptionist"]);
+
   const [invoices, setInvoices] = useState<any[]>([]);
   const [visits, setVisits] = useState<any[]>([]);
   const [services, setServices] = useState<any[]>([]);
@@ -34,8 +39,14 @@ export default function ReceiptPage() {
   };
   useEffect(() => { fetchData(); }, []);
 
-  const addItem = () => setFormData(prev => ({ ...prev, Items: [...prev.Items, { ServiceID: "", Quantity: 1, Rate: 0, Amount: 0 }] }));
-  const removeItem = (i: number) => setFormData(prev => ({ ...prev, Items: prev.Items.filter((_, idx) => idx !== i) }));
+  const addItem = () => {
+    if (!canCreate) return;
+    setFormData(prev => ({ ...prev, Items: [...prev.Items, { ServiceID: "", Quantity: 1, Rate: 0, Amount: 0 }] }));
+  };
+  const removeItem = (i: number) => {
+    if (!canCreate) return;
+    setFormData(prev => ({ ...prev, Items: prev.Items.filter((_, idx) => idx !== i) }));
+  };
 
   const updateItem = (index: number, field: keyof ItemForm, value: any) => {
     const newItems = [...formData.Items];
@@ -51,6 +62,8 @@ export default function ReceiptPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreate) return;
+
     const invoiceResult = await CreateInvoice({ OPDID: parseInt(formData.OPDID), InvoiceDate: new Date().toISOString(), TotalAmount: totalAmount, PaymentModeID: parseInt(formData.PaymentModeID) });
     const invoiceId = invoiceResult?.InvoiceID || invoiceResult?.data?.InvoiceID;
     if (invoiceId && formData.Items.length > 0) {
@@ -63,7 +76,7 @@ export default function ReceiptPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold text-slate-800">Billing & Receipts</h1><p className="text-slate-500">Generate and manage consultation receipts</p></div>
-        <Button onClick={() => { setFormData({ OPDID: "", PaymentModeID: "1", Items: [] }); setIsModalOpen(true); }} className="gap-2"><ReceiptIndianRupee className="h-4 w-4" /> New Receipt</Button>
+        {canCreate && <Button onClick={() => { setFormData({ OPDID: "", PaymentModeID: "1", Items: [] }); setIsModalOpen(true); }} className="gap-2"><ReceiptIndianRupee className="h-4 w-4" /> New Receipt</Button>}
       </div>
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>Receipt No</TableHead><TableHead>Date</TableHead><TableHead>OPD Ref</TableHead><TableHead>Amount</TableHead><TableHead>Payment Mode</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
@@ -82,7 +95,7 @@ export default function ReceiptPage() {
         </Table>
       </CardContent></Card>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Generate New Receipt" description="Select visit and add services to bill.">
+      <Modal isOpen={isModalOpen && canCreate} onClose={() => setIsModalOpen(false)} title="Generate New Receipt" description="Select visit and add services to bill.">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5"><label className="text-sm font-semibold text-slate-700">Select OPD Visit</label>

@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin","Doctor","Patient","Receptionist","User"])
 
         const diagnosis = await diagnosisService.getDiagnosis()
         return success(diagnosis)
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin"])
+        authorize(user, ["Admin", "Doctor"])
 
         const body = await req.json()
         const diagnosis = await diagnosisService.createDiagnosis(body)

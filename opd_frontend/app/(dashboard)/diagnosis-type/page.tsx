@@ -9,8 +9,14 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllDiagnosisTypes, CreateDiagnosisType, UpdateDiagnosisType, DeleteDiagnosisType } from "@/app/service/master.service";
+import { useRole } from "@/context/RoleContext";
+import { hasRole } from "@/lib/rbac";
 
 export default function DiagnosisTypePage() {
+  const { role } = useRole();
+  const canAddEdit = hasRole(role, ["Admin", "Doctor"]);
+  const canDelete = hasRole(role, ["Admin"]);
+
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,6 +27,8 @@ export default function DiagnosisTypePage() {
   useEffect(() => { fetchData(); }, []);
 
   const handleOpenModal = (item?: any) => {
+    if (!canAddEdit) return;
+
     if (item) { setEditing(item); setFormData({ DiagnosisName: item.DiagnosisName, ICDCode: item.ICDCode }); }
     else { setEditing(null); setFormData({ DiagnosisName: "", ICDCode: "" }); }
     setIsModalOpen(true);
@@ -28,17 +36,22 @@ export default function DiagnosisTypePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canAddEdit) return;
+
     if (editing) { await UpdateDiagnosisType(editing.DiagnosisID, formData); } else { await CreateDiagnosisType(formData); }
     setIsModalOpen(false); fetchData();
   };
 
-  const handleDelete = async (id: number) => { if (confirm("Are you sure?")) { await DeleteDiagnosisType(id); fetchData(); } };
+  const handleDelete = async (id: number) => {
+    if (!canDelete) return;
+    if (confirm("Are you sure?")) { await DeleteDiagnosisType(id); fetchData(); }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-3xl font-bold text-slate-800">Diagnosis Type</h1><p className="text-slate-500">Manage diagnosis types</p></div>
-        <Button onClick={() => handleOpenModal()} className="gap-2"><Plus className="h-4 w-4" /> Add Diagnosis</Button>
+        {canAddEdit && <Button onClick={() => handleOpenModal()} className="gap-2"><Plus className="h-4 w-4" /> Add Diagnosis</Button>}
       </div>
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>ICD Code</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
@@ -49,14 +62,14 @@ export default function DiagnosisTypePage() {
                   <Link href={`/diagnosis-type/${d.DiagnosisID}`}>
                     <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
                   </Link>
-                  <Button variant="ghost" size="icon" onClick={() => handleOpenModal(d)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(d.DiagnosisID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                  {canAddEdit && <Button variant="ghost" size="icon" onClick={() => handleOpenModal(d)}><Pencil className="h-4 w-4" /></Button>}
+                  {canDelete && <Button variant="ghost" size="icon" onClick={() => handleDelete(d.DiagnosisID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
                 </TableCell></TableRow>))
             )}
           </TableBody>
         </Table>
       </CardContent></Card>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Diagnosis" : "Add Diagnosis"}>
+      <Modal isOpen={isModalOpen && canAddEdit} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Diagnosis" : "Add Diagnosis"}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input label="Diagnosis Name" value={formData.DiagnosisName} onChange={(e) => setFormData({ ...formData, DiagnosisName: e.target.value })} required />
           <Input label="ICD Code" value={formData.ICDCode} onChange={(e) => setFormData({ ...formData, ICDCode: e.target.value })} required />

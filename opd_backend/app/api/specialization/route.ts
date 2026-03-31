@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin"])
+        authorize(user, ["Admin", "Doctor", "Patient", "Receptionist", "User"])
 
         const specialization = await specializationService.getSpecialization()
         return success(specialization)

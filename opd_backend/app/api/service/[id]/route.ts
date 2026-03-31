@@ -31,7 +31,7 @@ export async function PATCH(
 ) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin"])
+        authorize(user, ["Admin", "Doctor", "Receptionist"])
 
         const { id } = await params
 

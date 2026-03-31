@@ -60,10 +60,28 @@ export const patientService = {
                 throw new AppError("Patient already exists for this user", 409);
             }
 
+            // Generate next PatientNo
+            const lastPatient = await tx.patient.findFirst({
+                orderBy: { PatientNo: "desc" },
+                take: 1,
+            });
+            const nextPatientNo = (lastPatient?.PatientNo || 0) + 1;
+
+            // Parse DOB to proper Date format if it's a string
+            let dobDate = data.DOB;
+            if (typeof data.DOB === 'string') {
+                dobDate = new Date(data.DOB);
+                if (isNaN(dobDate.getTime())) {
+                    throw new AppError("Invalid DOB format. Expected ISO-8601 date format (YYYY-MM-DD).", 400);
+                }
+            }
+
             const patientPayload = {
                 ...data,
                 Mobile: mobile,
                 UserID: user.UserID,
+                PatientNo: nextPatientNo,
+                DOB: dobDate,
             };
 
             delete patientPayload.Username;
@@ -122,9 +140,19 @@ export const patientService = {
                 });
             }
 
+            // Parse DOB to proper Date format if it's a string
+            let updateData = { ...data, Mobile: mobile };
+            if (updateData.DOB && typeof updateData.DOB === 'string') {
+                const dobDate = new Date(updateData.DOB);
+                if (isNaN(dobDate.getTime())) {
+                    throw new AppError("Invalid DOB format. Expected ISO-8601 date format (YYYY-MM-DD).", 400);
+                }
+                updateData.DOB = dobDate;
+            }
+
             return tx.patient.update({
                 where: { PatientID: id },
-                data: { ...data, Mobile: mobile },
+                data: updateData,
             });
         });
     },

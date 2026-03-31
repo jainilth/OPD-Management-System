@@ -8,8 +8,15 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllUsers, CreateUser, UpdateUser, DeleteUser, GetAllRoles } from "@/app/service/user.service";
+import { useRole } from "@/context/RoleContext";
+import { hasRole } from "@/lib/rbac";
 
 export default function UserPage() {
+  const { role } = useRole();
+  const canCreate = hasRole(role, ["Admin"]);
+  const canEdit = hasRole(role, ["Admin", "Receptionist"]);
+  const canDelete = hasRole(role, ["Admin"]);
+
   const [users, setUsers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +35,8 @@ export default function UserPage() {
   useEffect(() => { fetchData(); }, []);
 
   const handleOpenModal = (user?: any) => {
+    if ((user && !canEdit) || (!user && !canCreate)) return;
+
     if (user) {
       setEditing(user);
       setFormData({ 
@@ -45,6 +54,8 @@ export default function UserPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if ((editing && !canEdit) || (!editing && !canCreate)) return;
+
     const payload = { 
       ...formData, 
       RoleID: parseInt(formData.RoleID)
@@ -66,6 +77,8 @@ export default function UserPage() {
   };
 
   const handleDelete = async (id: number) => { 
+    if (!canDelete) return;
+
     if (confirm("Are you sure you want to delete this user?")) { 
       await DeleteUser(id); 
       fetchData(); 
@@ -84,9 +97,11 @@ export default function UserPage() {
           <h1 className="text-3xl font-bold text-slate-800">User Master</h1>
           <p className="text-slate-500">Manage system users and access roles</p>
         </div>
-        <Button onClick={() => handleOpenModal()} className="gap-2">
-          <Plus className="h-4 w-4" /> Add User
-        </Button>
+        {canCreate && (
+          <Button onClick={() => handleOpenModal()} className="gap-2">
+            <Plus className="h-4 w-4" /> Add User
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -120,12 +135,16 @@ export default function UserPage() {
                     </TableCell>
                     <TableCell>{u.Mobile || "-"}</TableCell>
                     <TableCell className="text-right space-x-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal(u)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(u.UserID)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
+                      {canEdit && (
+                        <Button variant="ghost" size="icon" onClick={() => handleOpenModal(u)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(u.UserID)}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -136,7 +155,7 @@ export default function UserPage() {
       </Card>
 
       <Modal 
-        isOpen={isModalOpen} 
+        isOpen={isModalOpen && (canCreate || canEdit)} 
         onClose={() => setIsModalOpen(false)} 
         title={editing ? "Edit User" : "Add User"}
       >

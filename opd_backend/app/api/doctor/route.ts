@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin"])
+        authorize(user, ["Admin", "Receptionist"])
 
         const body = await req.json()
         const doctor = await doctorService.createDoctor(body)

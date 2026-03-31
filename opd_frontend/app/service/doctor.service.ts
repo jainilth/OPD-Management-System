@@ -10,6 +10,9 @@ export async function GetAllDoctors() {
 export async function GetDoctorById(id: number) {
     return await authFetch(`/api/doctor/${id}`)
 }
+export async function CheckUserByMobile(mobile: string) {
+    return await authFetch(`/api/user/check-mobile?mobile=${encodeURIComponent(mobile)}`)
+}
 export async function CreateDoctor(data: any) {
     const result = await authFetch('/api/doctor', {
         method: 'POST',

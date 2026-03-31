@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user: any = authenticate(req);
-        authorize(user, ["Admin"]);
+        authorize(user, ["Admin", "Doctor", "Receptionist"]);
         const body = await req.json();
         const treatmenttype = await treatmenttypeService.createTreatmenttype(body)
         return success(treatmenttype, 201)
