@@ -19,7 +19,7 @@ export default function DoctorPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [isNewUser, setIsNewUser] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [formData, setFormData] = useState({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
 
   const fetchData = async () => {
@@ -36,11 +36,9 @@ export default function DoctorPage() {
   const handleOpenModal = (doc?: any) => {
     if (doc) {
       setEditing(doc);
-      setIsNewUser(false);
       setFormData({ DoctorName: doc.DoctorName, DepartmentID: String(doc.DepartmentID), ConsultationFee: String(doc.ConsultationFee), HospitalID: String(doc.HospitalID || ""), Mobile: doc.Mobile || "", Username: "", Password: "" });
     } else {
       setEditing(null);
-      setIsNewUser(false);
       setFormData({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
     }
     setIsModalOpen(true);
@@ -48,14 +46,34 @@ export default function DoctorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: any = { ...formData, DepartmentID: parseInt(formData.DepartmentID), ConsultationFee: parseFloat(formData.ConsultationFee), HospitalID: formData.HospitalID ? parseInt(formData.HospitalID) : undefined };
-    
-    if (!isNewUser) {
-        delete payload.Username;
-        delete payload.Password;
+    setFeedback(null);
+
+    const payload: any = {
+      ...formData,
+      DepartmentID: parseInt(formData.DepartmentID),
+      ConsultationFee: parseFloat(formData.ConsultationFee),
+      HospitalID: formData.HospitalID ? parseInt(formData.HospitalID) : undefined,
+    };
+
+    if (editing) {
+      delete payload.Username;
+      delete payload.Password;
     }
 
-    if (editing) { await UpdateDoctor(editing.DoctorID, payload); } else { await CreateDoctor(payload); }
+    const result = editing
+      ? await UpdateDoctor(editing.DoctorID, payload)
+      : await CreateDoctor(payload);
+
+    if (result?.error) {
+      setFeedback({ type: "error", message: result.error });
+      return;
+    }
+
+    setFeedback({
+      type: "success",
+      message: result?.message || (editing ? "Doctor updated successfully" : "Doctor created successfully"),
+    });
+
     setIsModalOpen(false);
     fetchData();
   };
@@ -68,6 +86,17 @@ export default function DoctorPage() {
         <div><h1 className="text-3xl font-bold text-slate-800">Doctor Master</h1><p className="text-slate-500">Manage doctor profiles</p></div>
         <Button onClick={() => handleOpenModal()} className="gap-2"><Plus className="h-4 w-4" /> Add Doctor</Button>
       </div>
+      {feedback && (
+        <div
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            feedback.type === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-red-200 bg-red-50 text-red-700"
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow>
           <TableHead>Name</TableHead><TableHead>Department</TableHead><TableHead>Fee</TableHead><TableHead>Mobile</TableHead><TableHead className="text-right">Actions</TableHead>
@@ -92,21 +121,7 @@ export default function DoctorPage() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Doctor" : "Add Doctor"}>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!editing && (
-            <div className="space-y-2 p-3 bg-slate-50 border border-slate-100 rounded-lg">
-              <label className="text-sm font-semibold text-slate-700">Assign to User</label>
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
-                  <input type="radio" checked={!isNewUser} onChange={() => setIsNewUser(false)} className="w-4 h-4 text-blue-500 focus:ring-blue-500 border-slate-300" />
-                  Existing User
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-blue-600 transition-colors">
-                  <input type="radio" checked={isNewUser} onChange={() => setIsNewUser(true)} className="w-4 h-4 text-blue-500 focus:ring-blue-500 border-slate-300" />
-                  New User
-                </label>
-              </div>
-            </div>
-          )}
+          {!editing && <p className="text-xs text-slate-500">System checks by mobile number. Existing user is reused automatically; if not found, a new user is created using Username and Password.</p>}
           <Input label="Doctor Name" value={formData.DoctorName} onChange={(e) => setFormData({ ...formData, DoctorName: e.target.value })} required />
           <div className="space-y-1.5"><label className="text-sm font-semibold text-slate-700">Department</label>
             <select className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" value={formData.DepartmentID} onChange={(e) => setFormData({ ...formData, DepartmentID: e.target.value })} required>
@@ -122,10 +137,10 @@ export default function DoctorPage() {
             </select>
           </div>
           <Input label="Mobile" value={formData.Mobile} onChange={(e) => setFormData({ ...formData, Mobile: e.target.value })} required />
-          {!editing && isNewUser && (
+          {!editing && (
             <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-              <Input label="Username" value={formData.Username} onChange={(e) => setFormData({ ...formData, Username: e.target.value })} required />
-              <Input type="password" label="Password" value={formData.Password} onChange={(e) => setFormData({ ...formData, Password: e.target.value })} required />
+              <Input label="Username (required only if mobile is new)" value={formData.Username} onChange={(e) => setFormData({ ...formData, Username: e.target.value })} />
+              <Input type="password" label="Password (required only if mobile is new)" value={formData.Password} onChange={(e) => setFormData({ ...formData, Password: e.target.value })} />
             </div>
           )}
           <div className="flex justify-end gap-3"><Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button><Button type="submit">{editing ? "Update" : "Create"}</Button></div>

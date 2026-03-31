@@ -1,59 +1,131 @@
 import { doctorRepo } from "../repositories/doctor.repo";
 import { prisma } from "../lib/prisma";
+import { AppError } from "@/utils/app-error";
 
 export const doctorService = {
     createDoctor: async (data: any) => {
-        if (!data.Mobile) {
-            throw new Error("Mobile number is required");
+        const mobile = String(data.Mobile || "").trim();
+        if (!mobile) {
+            throw new AppError("Mobile number is required", 400);
         }
 
-        // Check if Mobile exists in Patient table
-        const existingPatient = await prisma.patient.findFirst({ where: { Mobile: data.Mobile } });
-        if (existingPatient) {
-            throw new Error("Mobile number already registered as a Patient");
-        }
-
-        // Check if Mobile exists in Doctor table
-        const existingDoctor = await prisma.doctor.findFirst({ where: { Mobile: data.Mobile } });
-        if (existingDoctor) {
-            throw new Error("Mobile number already registered as a Doctor");
-        }
-
-        // Check if User exists
-        let user = await prisma.user.findFirst({ where: { Mobile: data.Mobile } });
-        let userId = user?.UserID;
-
-        if (!userId) {
-            if (!data.Username || !data.Password) {
-                throw new Error("User does not exist. Please provide Username and Password.");
-            }
-
-            const role = await prisma.role.findUnique({ where: { RoleName: 'Doctor' } });
+        return prisma.$transaction(async (tx) => {
+            const role = await tx.role.findUnique({ where: { RoleName: "Doctor" } });
             if (!role) {
-                throw new Error("Role 'Doctor' not found in database.");
+                throw new AppError("Role 'Doctor' not found in database.", 500);
             }
 
-            const newUser = await prisma.user.create({
-                data: {
-                    Username: data.Username,
-                    Password: data.Password, // Ensure hashing is handled globally or here if needed.
-                    Mobile: data.Mobile,
-                    RoleID: role.RoleID
+            const [existingDoctorByMobile, existingPatientByMobile, existingUserByMobile] = await Promise.all([
+                tx.doctor.findFirst({ where: { Mobile: mobile } }),
+                tx.patient.findFirst({ where: { Mobile: mobile } }),
+                tx.user.findFirst({ where: { Mobile: mobile } }),
+            ]);
+
+            if (existingDoctorByMobile) {
+                throw new AppError("Mobile number already exists as Doctor", 409);
+            }
+            if (existingPatientByMobile) {
+                throw new AppError("Mobile number already exists as Patient", 409);
+            }
+
+            let user = existingUserByMobile;
+            let userAction = "reused";
+            let roleUpdated = false;
+
+            if (!user) {
+                if (!data.Username || !data.Password) {
+                    throw new AppError("User not found by mobile. Provide Username and Password to create a new User.", 400);
                 }
-            });
-            userId = newUser.UserID;
-        }
 
-        // Remove auth fields from data before saving to Doctor to match schema
-        delete data.Username;
-        delete data.Password;
+                user = await tx.user.create({
+                    data: {
+                        Username: data.Username,
+                        Password: data.Password,
+                        Mobile: mobile,
+                        RoleID: role.RoleID,
+                    },
+                });
+                userAction = "created";
+            } else if (user.RoleID !== role.RoleID) {
+                user = await tx.user.update({
+                    where: { UserID: user.UserID },
+                    data: { RoleID: role.RoleID },
+                });
+                roleUpdated = true;
+            }
 
-        data.UserID = userId;
+            const existingDoctorByUser = await tx.doctor.findFirst({ where: { UserID: user.UserID } });
+            if (existingDoctorByUser) {
+                throw new AppError("Doctor already exists for this user", 409);
+            }
 
-        return doctorRepo.create(data);
+            const doctorPayload = {
+                ...data,
+                Mobile: mobile,
+                UserID: user.UserID,
+            };
+
+            delete doctorPayload.Username;
+            delete doctorPayload.Password;
+
+            const doctor = await tx.doctor.create({ data: doctorPayload });
+
+            return {
+                message: `Doctor created successfully. User ${userAction}.`,
+                doctor,
+                user: {
+                    UserID: user.UserID,
+                    action: userAction,
+                    role: "Doctor",
+                    roleUpdated,
+                },
+            };
+        });
     },
     getDoctor: () => doctorRepo.findAll(),
     getDoctorById: (id: number) => doctorRepo.findById(id),
-    updateDoctor: (id: number, data: any) => doctorRepo.update(id, data),
+    updateDoctor: async (id: number, data: any) => {
+        const existingDoctor = await prisma.doctor.findUnique({ where: { DoctorID: id } });
+        if (!existingDoctor) {
+            throw new AppError("Doctor not found", 404);
+        }
+
+        const mobile = typeof data.Mobile === "string" ? data.Mobile.trim() : undefined;
+        if (!mobile) {
+            return doctorRepo.update(id, data);
+        }
+
+        return prisma.$transaction(async (tx) => {
+            const [doctorWithMobile, patientWithMobile, userWithMobile] = await Promise.all([
+                tx.doctor.findFirst({ where: { Mobile: mobile } }),
+                tx.patient.findFirst({ where: { Mobile: mobile } }),
+                tx.user.findFirst({ where: { Mobile: mobile } }),
+            ]);
+
+            if (doctorWithMobile && doctorWithMobile.DoctorID !== id) {
+                throw new AppError("Mobile number already exists as Doctor", 409);
+            }
+
+            if (patientWithMobile) {
+                throw new AppError("Mobile number already exists as Patient", 409);
+            }
+
+            if (existingDoctor.UserID) {
+                if (userWithMobile && userWithMobile.UserID !== existingDoctor.UserID) {
+                    throw new AppError("Mobile number already exists as User", 409);
+                }
+
+                await tx.user.update({
+                    where: { UserID: existingDoctor.UserID },
+                    data: { Mobile: mobile },
+                });
+            }
+
+            return tx.doctor.update({
+                where: { DoctorID: id },
+                data: { ...data, Mobile: mobile },
+            });
+        });
+    },
     deleteDoctor: (id: number) => doctorRepo.delete(id),
 }
