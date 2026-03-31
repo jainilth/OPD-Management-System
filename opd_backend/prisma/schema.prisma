@@ -16,8 +16,8 @@ model appointment {
   DoctorID            Int?
   Status              appointment_Status?
 
-  patient patient? @relation(fields: [PatientID], references: [PatientID])
-  doctor  doctor?  @relation(fields: [DoctorID], references: [DoctorID])
+  patient patient? @relation(fields: [PatientID], references: [PatientID], map: "fk_appointment_patientid")
+  doctor  doctor?  @relation(fields: [DoctorID], references: [DoctorID], map: "fk_appointment_doctorid")
 
   @@index([DoctorID], map: "DoctorID")
   @@index([PatientID], map: "PatientID")
@@ -28,7 +28,7 @@ model department {
   DepartmentName String @db.VarChar(255)
   HospitalID     Int?
 
-  hospital hospital? @relation(fields: [HospitalID], references: [HospitalID])
+  hospital hospital? @relation(fields: [HospitalID], references: [HospitalID], map: "fk_department_hospitalid")
   doctors  doctor[]
 
   @@index([HospitalID], map: "HospitalID")
@@ -52,9 +52,9 @@ model doctor {
   photourl        String?  @db.VarChar(100)
   Mobile          String?  @unique(map: "Mobile_UNIQUE") @db.VarChar(20)
 
-  department department @relation(fields: [DepartmentID], references: [DepartmentID])
-  hospital   hospital?  @relation(fields: [HospitalID], references: [HospitalID])
-  user       user?      @relation(fields: [UserID], references: [UserID])
+  department department @relation(fields: [DepartmentID], references: [DepartmentID], map: "fk_doctor_departmentid")
+  hospital   hospital?  @relation(fields: [HospitalID], references: [HospitalID], map: "fk_doctor_hospitalid")
+  user       user?      @relation(fields: [UserID], references: [UserID], map: "fk_doctor_userid")
 
   appointments          appointment[]
   doctorspecializations doctorspecialization[]
@@ -72,8 +72,8 @@ model doctorspecialization {
   IsPrimary              Boolean?  @default(false)
   CreatedAt              DateTime? @default(now()) @db.DateTime(0)
 
-  doctor         doctor         @relation(fields: [DoctorID], references: [DoctorID])
-  specialization specialization @relation(fields: [SpecializationID], references: [SpecializationID])
+  doctor         doctor         @relation(fields: [DoctorID], references: [DoctorID], map: "fk_doctorspecialization_doctorid")
+  specialization specialization @relation(fields: [SpecializationID], references: [SpecializationID], map: "fk_doctorspecialization_specializationid")
 
   @@unique([DoctorID, SpecializationID], map: "DoctorID")
   @@index([SpecializationID], map: "SpecializationID")
@@ -97,10 +97,11 @@ model invoice {
   OPDID         Int?
   InvoiceDate   DateTime? @db.DateTime(0)
   TotalAmount   Decimal?  @db.Decimal(10, 2)
+  // FIX: Make non-nullable if payment is always required at invoice creation
   PaymentModeID Int?
 
-  opdvisit    opdvisit?    @relation(fields: [OPDID], references: [OPDID])
-  paymentmode paymentmode? @relation(fields: [PaymentModeID], references: [PaymentModeID])
+  opdvisit    opdvisit?    @relation(fields: [OPDID], references: [OPDID], map: "fk_invoice_opdid")
+  paymentmode paymentmode? @relation(fields: [PaymentModeID], references: [PaymentModeID], map: "fk_invoice_paymentmodeid")
 
   invoiceitems invoiceitem[]
 
@@ -116,8 +117,8 @@ model invoiceitem {
   Rate          Decimal? @db.Decimal(10, 2)
   Amount        Decimal? @db.Decimal(10, 2)
 
-  invoice invoice? @relation(fields: [InvoiceID], references: [InvoiceID])
-  service service? @relation(fields: [ServiceID], references: [ServiceID])
+  invoice invoice? @relation(fields: [InvoiceID], references: [InvoiceID], map: "fk_invoiceitem_invoiceid")
+  service service? @relation(fields: [ServiceID], references: [ServiceID], map: "fk_invoiceitem_serviceid")
 
   @@index([InvoiceID], map: "InvoiceID")
   @@index([ServiceID], map: "ServiceID")
@@ -128,8 +129,8 @@ model opddiagnosis {
   OPDID          Int?
   DiagnosisID    Int?
 
-  opdvisit  opdvisit?  @relation(fields: [OPDID], references: [OPDID])
-  diagnosis diagnosis? @relation(fields: [DiagnosisID], references: [DiagnosisID])
+  opdvisit  opdvisit?  @relation(fields: [OPDID], references: [OPDID], map: "fk_opddiagnosis_opdid")
+  diagnosis diagnosis? @relation(fields: [DiagnosisID], references: [DiagnosisID], map: "fk_opddiagnosis_diagnosisid")
 
   @@index([DiagnosisID], map: "DiagnosisID")
   @@index([OPDID], map: "OPDID")
@@ -142,10 +143,12 @@ model opdvisit {
   DoctorID        Int?
   VisitDateTime   DateTime?           @db.DateTime(0)
   VisitType       opdvisit_VisitType?
+  // NOTE: This fee is a snapshot from hospital.RegistrationCharge at time of visit.
+  // Keep it intentionally if you want historical accuracy; remove if you want live lookup.
   RegistrationFee Decimal?            @db.Decimal(10, 2)
 
-  patient patient? @relation(fields: [PatientID], references: [PatientID])
-  doctor  doctor?  @relation(fields: [DoctorID], references: [DoctorID])
+  patient patient? @relation(fields: [PatientID], references: [PatientID], map: "fk_opdvisit_patientid")
+  doctor  doctor?  @relation(fields: [DoctorID], references: [DoctorID], map: "fk_opdvisit_doctorid")
 
   invoices     invoice[]
   opddiagnoses opddiagnosis[]
@@ -164,7 +167,7 @@ model patient {
   Address   String         @db.VarChar(255)
   UserID    Int?           @unique(map: "UserID")
 
-  user user? @relation(fields: [UserID], references: [UserID])
+  user user? @relation(fields: [UserID], references: [UserID], map: "fk_patient_userid")
 
   appointments appointment[]
   opdvisits    opdvisit[]
@@ -186,11 +189,12 @@ model role {
 
 model service {
   ServiceID       Int      @id @default(autoincrement())
-  TreatmentTypeID Int?
+  // FIX: Changed from Int? to Int — a service should always belong to a treatment type
+  TreatmentTypeID Int
   ServiceName     String?  @db.VarChar(255)
   Rate            Decimal? @db.Decimal(10, 2)
 
-  treatmenttype treatmenttype? @relation(fields: [TreatmentTypeID], references: [TreatmentTypeID])
+  treatmenttype treatmenttype @relation(fields: [TreatmentTypeID], references: [TreatmentTypeID], map: "fk_service_treatmenttypeid")
 
   invoiceitems invoiceitem[]
 
@@ -218,10 +222,12 @@ model user {
   Password  String    @db.VarChar(255)
   RoleID    Int
   CreatedAt DateTime? @default(now()) @db.DateTime(0)
-  UpdatedAt DateTime? @default(now()) @db.DateTime(0)
+  // FIX: UpdatedAt won't auto-update in Prisma/MySQL without a trigger.
+  // Use @updatedAt for Prisma-managed updates, or add a DB-level ON UPDATE trigger.
+  UpdatedAt DateTime? @updatedAt @db.DateTime(0)
   Mobile    String?   @unique(map: "Mobile") @db.VarChar(20)
 
-  role role @relation(fields: [RoleID], references: [RoleID])
+  role role @relation(fields: [RoleID], references: [RoleID], map: "fk_user_roleid")
 
   doctor  doctor?
   patient patient?
