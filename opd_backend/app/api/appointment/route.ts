@@ -9,9 +9,11 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Receptionist", "Patient"])
 
-        const appointment = await appointmentService.getAppointment()
+        const appointment = user.role === "Patient"
+            ? await appointmentService.getAppointmentForPatientUser(Number(user.userId))
+            : await appointmentService.getAppointment()
         return success(appointment)
     }
     catch (error) {
@@ -23,10 +25,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Receptionist", "Patient"])
 
         const body = await req.json()
-        const appointment = await appointmentService.createAppointment(body)
+        const appointment = user.role === "Patient"
+            ? await appointmentService.createAppointmentForPatientUser(Number(user.userId), body)
+            : await appointmentService.createAppointment(body)
 
         return success(appointment, 201)
     }

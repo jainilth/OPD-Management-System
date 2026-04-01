@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Doctor", "Receptionist"])
 
         const treatmenttype = await treatmenttypeService.getTreatmenttype()
         return success(treatmenttype)

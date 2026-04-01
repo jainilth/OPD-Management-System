@@ -33,7 +33,7 @@ const menuGroups: MenuGroup[] = [
       { name: "Diagnosis Type", icon: "Stethoscope", href: "/diagnosis-type", roles: ["Admin", "Doctor", "Receptionist"] },
       { name: "Treatment Type", icon: "Layers", href: "/treatment-type", roles: ["Admin", "Doctor", "Receptionist"] },
       { name: "Sub Treatment", icon: "ListTree", href: "/sub-treatment-type", roles: ["Admin", "Doctor", "Receptionist"] },
-      { name: "Payment Mode", icon: "WalletCards", href: "/payment-mode", roles: ["Admin", "Receptionist"] },
+      { name: "Payment Mode", icon: "WalletCards", href: "/payment-mode", roles: ["Admin"] },
       { name: "Role Master", icon: "ShieldCheck", href: "/role", roles: ["Admin"] },
       { name: "User Master", icon: "Users", href: "/user", roles: ["Admin"] },
     ],
@@ -41,9 +41,11 @@ const menuGroups: MenuGroup[] = [
   {
     label: "Operations",
     items: [
+      { name: "Book Appointment", icon: "CalendarCheck", href: "/appointment", roles: ["Admin", "Receptionist", "Patient"] },
       { name: "Patient Reg", icon: "UserPlus", href: "/patient", roles: ["Admin", "Doctor", "Receptionist"] },
       { name: "OPD Entry", icon: "ClipboardList", href: "/opd", roles: ["Admin", "Doctor", "Receptionist"] },
-      { name: "Receipt Entry", icon: "ReceiptIndianRupee", href: "/receipt", roles: ["Admin", "Doctor", "Receptionist"] },
+      { name: "Receipt Entry", icon: "ReceiptIndianRupee", href: "/receipt", roles: ["Admin", "Receptionist"] },
+      { name: "My Receipts", icon: "ReceiptIndianRupee", href: "/receipt", roles: ["Patient", "User"] },
     ],
   },
 ];
@@ -54,7 +56,7 @@ export async function Sidebar() {
   const filteredGroups = menuGroups
     .map(group => ({
       ...group,
-      items: group.items.filter(item => 
+      items: group.items.filter(item =>
         !item.roles || (session?.role && item.roles.includes(session.role))
       ),
     }))

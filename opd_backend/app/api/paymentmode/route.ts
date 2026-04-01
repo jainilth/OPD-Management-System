@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Doctor", "Receptionist"])
 
         const paymentmode = await paymentmodeService.getPaymentmode()
         return success(paymentmode)
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Receptionist"])
+        authorize(user, ["Admin"])
 
         const body = await req.json()
         const paymentmode = await paymentmodeService.createPaymentmode(body)

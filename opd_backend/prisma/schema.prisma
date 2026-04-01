@@ -95,17 +95,20 @@ model invoice {
   InvoiceID     Int       @id @default(autoincrement())
   InvoiceNo     String?   @unique(map: "InvoiceNo") @db.VarChar(50)
   OPDID         Int?
+  UserID        Int?
   InvoiceDate   DateTime? @db.DateTime(0)
   TotalAmount   Decimal?  @db.Decimal(10, 2)
   // FIX: Make non-nullable if payment is always required at invoice creation
   PaymentModeID Int?
 
   opdvisit    opdvisit?    @relation(fields: [OPDID], references: [OPDID], map: "fk_invoice_opdid")
+  user        user?        @relation(fields: [UserID], references: [UserID], map: "fk_invoice_userid")
   paymentmode paymentmode? @relation(fields: [PaymentModeID], references: [PaymentModeID], map: "fk_invoice_paymentmodeid")
 
   invoiceitems invoiceitem[]
 
   @@index([OPDID], map: "OPDID")
+  @@index([UserID], map: "UserID")
   @@index([PaymentModeID], map: "PaymentModeID")
 }
 
@@ -229,8 +232,9 @@ model user {
 
   role role @relation(fields: [RoleID], references: [RoleID], map: "fk_user_roleid")
 
-  doctor  doctor?
-  patient patient?
+  doctor    doctor?
+  patient   patient?
+  invoices  invoice[]
 
   @@index([RoleID], map: "RoleID")
 }

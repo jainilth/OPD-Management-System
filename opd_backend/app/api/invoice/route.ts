@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 export async function GET(req: NextRequest) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor", "Patient", "Receptionist"])
+        authorize(user, ["Admin", "Doctor", "Receptionist"])
 
         const invoice = await invoiceService.getInvoice()
         return success(invoice)

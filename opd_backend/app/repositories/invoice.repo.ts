@@ -1,6 +1,7 @@
 import { prisma } from "../lib/prisma";
 
 const invoiceInclude = {
+    user: true,
     opdvisit: {
         include: {
             patient: true,
@@ -26,6 +27,12 @@ const invoiceInclude = {
 export const invoiceRepo = {
     create: (data: any) => prisma.invoice.create({ data }),
     findAll: () => prisma.invoice.findMany({ include: invoiceInclude }),
+    findAllByUserId: (userId: number) =>
+        prisma.invoice.findMany({
+            where: { UserID: userId },
+            include: invoiceInclude,
+            orderBy: { InvoiceDate: "desc" },
+        }),
     findById: (id: number) =>
         prisma.invoice.findUnique({ where: { InvoiceID: id }, include: invoiceInclude }),
     update: (id: number, data: any) =>

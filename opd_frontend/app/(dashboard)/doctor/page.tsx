@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Eye, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Loader2, CheckCircle2, XCircle, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -35,7 +35,13 @@ export default function DoctorPage() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [mobileCheck, setMobileCheck] = useState<MobileCheckResult | null>(null);
   const [isCheckingMobile, setIsCheckingMobile] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSearchTerm, setMobileSearchTerm] = useState("");
   const [formData, setFormData] = useState({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
+
+  const filteredDoctorsByMobile = doctors.filter(d => 
+    d.Mobile?.includes(mobileSearchTerm) || d.DoctorName?.toLowerCase().includes(mobileSearchTerm.toLowerCase())
+  );
 
   const fetchData = async () => {
     setLoading(true);
@@ -54,10 +60,14 @@ export default function DoctorPage() {
     if (doc) {
       setEditing(doc);
       setMobileCheck(null);
+      setMobileSearchOpen(false);
+      setMobileSearchTerm(doc.Mobile || "");
       setFormData({ DoctorName: doc.DoctorName, DepartmentID: String(doc.DepartmentID), ConsultationFee: String(doc.ConsultationFee), HospitalID: String(doc.HospitalID || ""), Mobile: doc.Mobile || "", Username: "", Password: "" });
     } else {
       setEditing(null);
       setMobileCheck(null);
+      setMobileSearchOpen(false);
+      setMobileSearchTerm("");
       setFormData({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
     }
     setIsModalOpen(true);
@@ -204,22 +214,71 @@ export default function DoctorPage() {
             </select>
           </div>
           <Input label="Consultation Fee" type="number" value={formData.ConsultationFee} onChange={(e) => setFormData({ ...formData, ConsultationFee: e.target.value })} required />    
-          <Input
-            label="Mobile"
-            value={formData.Mobile}
-            className={!editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
-              ? "border-emerald-400 focus-visible:ring-emerald-500"
-              : !editing && !isCheckingMobile && (mobileCheck?.existsInDoctor || mobileCheck?.existsInPatient)
-                ? "border-red-400 focus-visible:ring-red-500"
-                : ""
-            }
-            onChange={(e) => {
-              setFormData({ ...formData, Mobile: e.target.value });
-              if (!editing) setMobileCheck(null);
-            }}
-            onBlur={handleMobileBlur}
-            required
-          />
+          <div className="space-y-1.5 relative">
+            <label className="text-sm font-semibold text-slate-700">Mobile</label>
+            <div className="relative">
+              <input
+                value={mobileSearchTerm}
+                placeholder="Search or enter mobile"
+                className={`flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  !editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
+                    ? "border-emerald-400 focus:ring-emerald-500"
+                    : !editing && !isCheckingMobile && (mobileCheck?.existsInDoctor || mobileCheck?.existsInPatient)
+                      ? "border-red-400 focus:ring-red-500"
+                      : "border-slate-200 focus:ring-blue-500"
+                }`}
+                onFocus={() => {
+                  if (!editing) setMobileSearchOpen(true);
+                }}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setMobileSearchTerm(value);
+                  setFormData({ ...formData, Mobile: value });
+                  if (!editing) {
+                    setMobileCheck(null);
+                    setMobileSearchOpen(true);
+                  }
+                }}
+                onBlur={handleMobileBlur}
+                required
+              />
+              {mobileSearchTerm && !editing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileSearchTerm("");
+                    setFormData({ ...formData, Mobile: "" });
+                    setMobileCheck(null);
+                    setMobileSearchOpen(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              {!editing && mobileSearchOpen && mobileSearchTerm.trim().length > 0 && filteredDoctorsByMobile.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                  {filteredDoctorsByMobile.slice(0, 8).map((d) => (
+                    <button
+                      key={d.DoctorID}
+                      type="button"
+                      className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-slate-50 last:border-b-0"
+                      onMouseDown={() => {
+                        const selectedMobile = String(d.Mobile || "");
+                        setMobileSearchTerm(selectedMobile);
+                        setFormData({ ...formData, Mobile: selectedMobile });
+                        setMobileSearchOpen(false);
+                        checkMobile(selectedMobile);
+                      }}
+                    >
+                      <div className="font-medium text-slate-700">{d.DoctorName}</div>
+                      <div className="text-xs text-slate-500">{d.Mobile || "No mobile"}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           {!editing && isCheckingMobile && (
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

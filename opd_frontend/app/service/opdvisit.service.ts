@@ -19,6 +19,23 @@ export async function CreateOPDVisit(data: any) {
     return result
 }
 
+export async function UpdateOPDVisit(id: number, data: any) {
+    const result = await authFetch(`/api/opdvisit/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+    })
+    revalidatePath('/opd')
+    return result
+}
+
+export async function DeleteOPDVisit(id: number) {
+    const result = await authFetch(`/api/opdvisit/${id}`, {
+        method: 'DELETE',
+    })
+    revalidatePath('/opd')
+    return result
+}
+
 // ====== OPD Diagnosis ======
 export async function CreateOPDDiagnosis(data: any) {
     const result = await authFetch('/api/opddiagnosis', {

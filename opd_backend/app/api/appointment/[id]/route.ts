@@ -12,11 +12,13 @@ export async function GET(
 ) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Receptionist", "Patient"])
 
         const { id } = await params
 
-        const appointment = await appointmentService.getAppointmentById(Number(id))
+        const appointment = user.role === "Patient"
+            ? await appointmentService.getAppointmentByIdForPatientUser(Number(id), Number(user.userId))
+            : await appointmentService.getAppointmentById(Number(id))
         return success(appointment)
     }
     catch (error) {
@@ -31,13 +33,15 @@ export async function PATCH(
 ) {
     try {
         const user: any = authenticate(req)
-        authorize(user, ["Admin", "Doctor"])
+        authorize(user, ["Admin", "Receptionist", "Patient"])
 
         const { id } = await params
 
         const body = await req.json()
 
-        const updated = await appointmentService.updateAppointment(Number(id), body)
+        const updated = user.role === "Patient"
+            ? await appointmentService.updateAppointmentForPatientUser(Number(id), Number(user.userId), body)
+            : await appointmentService.updateAppointment(Number(id), body)
 
         return success(updated)
     }

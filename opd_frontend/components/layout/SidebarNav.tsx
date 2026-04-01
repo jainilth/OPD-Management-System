@@ -14,6 +14,7 @@ import {
   ListTree,
   UserPlus,
   ClipboardList,
+  CalendarCheck,
   ReceiptIndianRupee,
   LayoutDashboard,
   Users,
@@ -37,6 +38,7 @@ const iconMap: Record<string, LucideIcon> = {
   ListTree,
   UserPlus,
   ClipboardList,
+  CalendarCheck,
   ReceiptIndianRupee,
   Users,
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Eye, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Eye, Loader2, CheckCircle2, XCircle, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -32,6 +32,8 @@ export default function PatientPage() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [mobileCheck, setMobileCheck] = useState<MobileCheckResult | null>(null);
   const [isCheckingMobile, setIsCheckingMobile] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileSearchTerm, setMobileSearchTerm] = useState("");
   const [formData, setFormData] = useState({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "", Username: "", Password: "" });
 
   const fetchData = async () => { setLoading(true); const data = await GetAllPatients(); if (!data?.error) setPatients(Array.isArray(data) ? data : []); setLoading(false); };
@@ -41,11 +43,15 @@ export default function PatientPage() {
     p.FullName?.toLowerCase().includes(search.toLowerCase()) || p.Mobile?.includes(search)
   );
 
+  const filteredPatientsByMobile = patients.filter((p) =>
+    p.Mobile?.includes(mobileSearchTerm) || p.FullName?.toLowerCase().includes(mobileSearchTerm.toLowerCase())
+  );
+
   const handleOpenModal = (patient?: any) => {
     if (!canAddEdit) return;
 
-    if (patient) { setEditing(patient); setMobileCheck(null); setFormData({ FullName: patient.FullName, DOB: patient.DOB?.split("T")[0] || "", Gender: patient.Gender, Mobile: patient.Mobile, Address: patient.Address, Username: "", Password: "" }); }
-    else { setEditing(null); setMobileCheck(null); setFormData({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "", Username: "", Password: "" }); }
+    if (patient) { setEditing(patient); setMobileCheck(null); setMobileSearchOpen(false); setMobileSearchTerm(patient.Mobile || ""); setFormData({ FullName: patient.FullName, DOB: patient.DOB?.split("T")[0] || "", Gender: patient.Gender, Mobile: patient.Mobile, Address: patient.Address, Username: "", Password: "" }); }
+    else { setEditing(null); setMobileCheck(null); setMobileSearchOpen(false); setMobileSearchTerm(""); setFormData({ FullName: "", DOB: "", Gender: "Male", Mobile: "", Address: "", Username: "", Password: "" }); }
     setIsModalOpen(true);
   };
 
@@ -177,22 +183,71 @@ export default function PatientPage() {
               <option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
             </select>
           </div>
-          <Input
-            label="Mobile"
-            value={formData.Mobile}
-            className={!editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
-              ? "border-emerald-400 focus-visible:ring-emerald-500"
-              : !editing && !isCheckingMobile && (mobileCheck?.existsInDoctor || mobileCheck?.existsInPatient)
-                ? "border-red-400 focus-visible:ring-red-500"
-                : ""
-            }
-            onChange={(e) => {
-              setFormData({ ...formData, Mobile: e.target.value });
-              if (!editing) setMobileCheck(null);
-            }}
-            onBlur={handleMobileBlur}
-            required
-          />
+          <div className="space-y-1.5 relative">
+            <label className="text-sm font-semibold text-slate-700">Mobile</label>
+            <div className="relative">
+              <input
+                value={mobileSearchTerm}
+                placeholder="Search or enter mobile"
+                className={`flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+                  !editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
+                    ? "border-emerald-400 focus:ring-emerald-500"
+                    : !editing && !isCheckingMobile && (mobileCheck?.existsInDoctor || mobileCheck?.existsInPatient)
+                      ? "border-red-400 focus:ring-red-500"
+                      : "border-slate-200 focus:ring-blue-500"
+                }`}
+                onFocus={() => {
+                  if (!editing) setMobileSearchOpen(true);
+                }}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setMobileSearchTerm(value);
+                  setFormData({ ...formData, Mobile: value });
+                  if (!editing) {
+                    setMobileCheck(null);
+                    setMobileSearchOpen(true);
+                  }
+                }}
+                onBlur={handleMobileBlur}
+                required
+              />
+              {mobileSearchTerm && !editing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileSearchTerm("");
+                    setFormData({ ...formData, Mobile: "" });
+                    setMobileCheck(null);
+                    setMobileSearchOpen(false);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              {!editing && mobileSearchOpen && mobileSearchTerm.trim().length > 0 && filteredPatientsByMobile.length > 0 && (
+                <div className="absolute top-full left-0 right-0 z-20 mt-1 max-h-48 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+                  {filteredPatientsByMobile.slice(0, 8).map((p) => (
+                    <button
+                      key={p.PatientID}
+                      type="button"
+                      className="block w-full border-b border-slate-100 px-3 py-2 text-left text-sm hover:bg-slate-50 last:border-b-0"
+                      onMouseDown={() => {
+                        const selectedMobile = String(p.Mobile || "");
+                        setMobileSearchTerm(selectedMobile);
+                        setFormData({ ...formData, Mobile: selectedMobile });
+                        setMobileSearchOpen(false);
+                        checkMobile(selectedMobile);
+                      }}
+                    >
+                      <div className="font-medium text-slate-700">{p.FullName}</div>
+                      <div className="text-xs text-slate-500">{p.Mobile || "No mobile"}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
           {!editing && isCheckingMobile && (
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

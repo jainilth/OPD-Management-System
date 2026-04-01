@@ -13,8 +13,9 @@ import { hasRole } from "@/lib/rbac";
 
 export default function PaymentModePage() {
     const { role } = useRole();
-    const canAddEdit = hasRole(role, ["Admin", "Receptionist"]);
+    const canAddEdit = hasRole(role, ["Admin"]);
     const canDelete = hasRole(role, ["Admin"]);
+    const canViewPage = hasRole(role, ["Admin"]);
 
     const [items, setItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -62,6 +63,16 @@ export default function PaymentModePage() {
             fetchData();
         }
     };
+
+    if (!canViewPage) {
+        return (
+            <div className="space-y-6">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    You are not authorized to access Payment Mode management.
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">

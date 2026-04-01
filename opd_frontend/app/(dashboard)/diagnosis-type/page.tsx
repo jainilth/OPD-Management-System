@@ -14,7 +14,7 @@ import { hasRole } from "@/lib/rbac";
 
 export default function DiagnosisTypePage() {
   const { role } = useRole();
-  const canAddEdit = hasRole(role, ["Admin", "Doctor"]);
+  const canAddEdit = hasRole(role, ["Admin", "Doctor", "Receptionist"]);
   const canDelete = hasRole(role, ["Admin"]);
 
   const [items, setItems] = useState<any[]>([]);

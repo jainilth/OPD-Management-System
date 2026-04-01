@@ -29,59 +29,68 @@ export async function GlobalSearch(query: string) {
     ])
 
     const q = query.toLowerCase()
+    const matchesModuleKeyword = (keywords: string[]) => keywords.some((k) => q.includes(k) || k.includes(q));
 
-    const filteredPatients = (Array.isArray(patients) ? patients : []).filter((p: any) => 
+    const filteredPatients = (Array.isArray(patients) ? patients : []).filter((p: any) =>
         p.FullName?.toLowerCase().includes(q) || p.Mobile?.includes(q) || p.PatientNo?.toString().includes(q) ||
         p.user?.Username?.toLowerCase().includes(q)
     ).slice(0, 5)
 
-    const filteredDoctors = (Array.isArray(doctors) ? doctors : []).filter((d: any) => 
+    const filteredDoctors = (Array.isArray(doctors) ? doctors : []).filter((d: any) =>
         d.DoctorName?.toLowerCase().includes(q) || d.Mobile?.includes(q) ||
         d.department?.DepartmentName?.toLowerCase().includes(q) ||
         d.hospital?.HospitalName?.toLowerCase().includes(q) ||
         d.user?.Username?.toLowerCase().includes(q)
     ).slice(0, 5)
 
-    const filteredVisits = (Array.isArray(visits) ? visits : []).filter((v: any) => 
-        v.OPDNo?.toLowerCase().includes(q) || v.patient?.FullName?.toLowerCase().includes(q) || v.doctor?.DoctorName?.toLowerCase().includes(q)
+    const filteredVisits = (Array.isArray(visits) ? visits : []).filter((v: any) =>
+        v.OPDNo?.toLowerCase().includes(q) ||
+        v.patient?.FullName?.toLowerCase().includes(q) ||
+        v.doctor?.DoctorName?.toLowerCase().includes(q) ||
+        matchesModuleKeyword(["opd", "opd entry", "visit", "opd visit"])
     ).slice(0, 5)
 
-    const filteredHospitals = (Array.isArray(hospitals) ? hospitals : []).filter((h: any) => 
+    const filteredHospitals = (Array.isArray(hospitals) ? hospitals : []).filter((h: any) =>
         h.HospitalName?.toLowerCase().includes(q) || h.ContactInfo?.toLowerCase().includes(q)
     ).slice(0, 5)
 
-    const filteredDiagnoses = (Array.isArray(diagnoses) ? diagnoses : []).filter((d: any) => 
+    const filteredDiagnoses = (Array.isArray(diagnoses) ? diagnoses : []).filter((d: any) =>
         d.DiagnosisName?.toLowerCase().includes(q) || d.ICDCode?.toLowerCase().includes(q)
     ).slice(0, 5)
 
-    const filteredTreatments = (Array.isArray(treatments) ? treatments : []).filter((t: any) => 
+    const filteredTreatments = (Array.isArray(treatments) ? treatments : []).filter((t: any) =>
         t.TreatmentTypeName?.toLowerCase().includes(q)
     ).slice(0, 5)
 
-    const filteredServices = (Array.isArray(services) ? services : []).filter((s: any) => 
+    const filteredServices = (Array.isArray(services) ? services : []).filter((s: any) =>
         s.ServiceName?.toLowerCase().includes(q) ||
         s.treatmenttype?.TreatmentTypeName?.toLowerCase().includes(q) ||
         s.Rate?.toString().includes(q)
     ).slice(0, 5)
 
-    const filteredReceipts = (Array.isArray(receipts) ? receipts : []).filter((r: any) => 
+    const filteredReceipts = (Array.isArray(receipts) ? receipts : []).filter((r: any) =>
         r.InvoiceNo?.toLowerCase().includes(q) || r.InvoiceID?.toString().includes(q) ||
         r.opdvisit?.patient?.FullName?.toLowerCase().includes(q) ||
         r.opdvisit?.doctor?.DoctorName?.toLowerCase().includes(q) ||
-        r.paymentmode?.PaymentModeName?.toLowerCase().includes(q)
+        r.paymentmode?.PaymentModeName?.toLowerCase().includes(q) ||
+        matchesModuleKeyword(["receipt", "receipt entry", "invoice", "billing"])
     ).slice(0, 5)
 
     const filteredDepartments = (Array.isArray(departments) ? departments : []).filter((d: any) =>
         d.DepartmentName?.toLowerCase().includes(q) ||
-        d.hospital?.HospitalName?.toLowerCase().includes(q)
+        d.hospital?.HospitalName?.toLowerCase().includes(q) ||
+        matchesModuleKeyword(["department", "department master"])
     ).slice(0, 5)
 
     const filteredSpecializations = (Array.isArray(specializations) ? specializations : []).filter((s: any) =>
-        s.SpecializationName?.toLowerCase().includes(q) || s.Description?.toLowerCase().includes(q)
+        s.SpecializationName?.toLowerCase().includes(q) ||
+        s.Description?.toLowerCase().includes(q) ||
+        matchesModuleKeyword(["specialization", "speciality", "specialization master"])
     ).slice(0, 5)
 
     const filteredPaymentModes = (Array.isArray(paymentModes) ? paymentModes : []).filter((p: any) =>
-        p.PaymentModeName?.toLowerCase().includes(q)
+        p.PaymentModeName?.toLowerCase().includes(q) ||
+        matchesModuleKeyword(["payment", "payment mode", "payment method"])
     ).slice(0, 5)
 
     const filteredUsers = (Array.isArray(users) ? users : []).filter((u: any) =>
@@ -91,7 +100,7 @@ export async function GlobalSearch(query: string) {
     ).slice(0, 5)
 
     const filteredRoles = (Array.isArray(roles) ? roles : []).filter((r: any) =>
-        r.RoleName?.toLowerCase().includes(q)
+        r.RoleName?.toLowerCase().includes(q) || matchesModuleKeyword(["role", "role master"])
     ).slice(0, 5)
 
     return {

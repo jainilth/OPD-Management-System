@@ -62,7 +62,7 @@ const masterScreens: MasterScreen[] = [
         href: "/diagnosis-type",
         icon: Stethoscope,
         color: "from-purple-500 to-purple-600",
-        roles: ["Admin", "Doctor", "Receptionist", "Patient", "User"],
+        roles: ["Admin", "Doctor", "Receptionist", "User"],
     },
     {
         name: "Treatment Type",
@@ -84,6 +84,7 @@ const masterScreens: MasterScreen[] = [
 
 const quickActionsByRole: Record<Role, Array<{ label: string; href: string; icon: any; tone: string }>> = {
     Admin: [
+        { label: "Book Appointment", href: "/appointment", icon: CalendarCheck, tone: "bg-teal-500/20 text-teal-400" },
         { label: "Register New Patient", href: "/patient", icon: Users, tone: "bg-blue-500/20 text-blue-400" },
         { label: "New OPD Entry", href: "/opd", icon: CalendarCheck, tone: "bg-green-500/20 text-green-400" },
         { label: "Generate Bill", href: "/receipt", icon: ReceiptIndianRupee, tone: "bg-amber-500/20 text-amber-400" },
@@ -91,17 +92,20 @@ const quickActionsByRole: Record<Role, Array<{ label: string; href: string; icon
     Doctor: [
         { label: "Open OPD Queue", href: "/opd", icon: CalendarCheck, tone: "bg-green-500/20 text-green-400" },
         { label: "View Patients", href: "/patient", icon: Users, tone: "bg-blue-500/20 text-blue-400" },
-        { label: "Create Bill", href: "/receipt", icon: ReceiptIndianRupee, tone: "bg-amber-500/20 text-amber-400" },
     ],
     Receptionist: [
+        { label: "Book Appointment", href: "/appointment", icon: CalendarCheck, tone: "bg-teal-500/20 text-teal-400" },
         { label: "Register New Patient", href: "/patient", icon: Users, tone: "bg-blue-500/20 text-blue-400" },
         { label: "Create OPD Entry", href: "/opd", icon: CalendarCheck, tone: "bg-green-500/20 text-green-400" },
         { label: "Receipt Entry", href: "/receipt", icon: ReceiptIndianRupee, tone: "bg-amber-500/20 text-amber-400" },
     ],
     Patient: [
+        { label: "Book Appointment", href: "/appointment", icon: CalendarCheck, tone: "bg-teal-500/20 text-teal-400" },
+        { label: "My Receipts", href: "/receipt", icon: ReceiptIndianRupee, tone: "bg-amber-500/20 text-amber-400" },
         { label: "Find Doctors", href: "/doctor", icon: Stethoscope, tone: "bg-indigo-500/20 text-indigo-400" },
     ],
     User: [
+        { label: "My Receipts", href: "/receipt", icon: ReceiptIndianRupee, tone: "bg-amber-500/20 text-amber-400" },
         { label: "Browse Doctors", href: "/doctor", icon: Stethoscope, tone: "bg-indigo-500/20 text-indigo-400" },
     ],
 };
