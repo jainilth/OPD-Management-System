@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllDepartments, CreateDepartment, UpdateDepartment, DeleteDepartment } from "@/app/service/master.service";
 import { GetAllHospitals } from "@/app/service/hospital.service";
@@ -75,7 +76,7 @@ export default function DepartmentPage() {
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Hospital</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {loading ? (<TableRow><TableCell colSpan={3} className="text-center py-10">Loading...</TableCell></TableRow>) : items.length === 0 ? (
+            {loading ? (<TableSkeletonRows columns={3} />) : items.length === 0 ? (
               <TableRow><TableCell colSpan={3} className="text-center py-10 text-slate-500">No records found.</TableCell></TableRow>
             ) : (
               items.map((item) => (

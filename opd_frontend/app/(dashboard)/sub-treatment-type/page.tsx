@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllServices, CreateService, UpdateService, DeleteService, GetAllTreatmentTypes } from "@/app/service/master.service";
 import { useRole } from "@/context/RoleContext";
@@ -64,7 +65,7 @@ export default function SubTreatmentTypePage() {
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>Service Name</TableHead><TableHead>Treatment Type</TableHead><TableHead>Rate</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {loading ? (<TableRow><TableCell colSpan={4} className="text-center py-10">Loading...</TableCell></TableRow>) : items.length === 0 ? (<TableRow><TableCell colSpan={4} className="text-center py-10 text-slate-500">No records found.</TableCell></TableRow>) : (
+            {loading ? (<TableSkeletonRows columns={4} />) : items.length === 0 ? (<TableRow><TableCell colSpan={4} className="text-center py-10 text-slate-500">No records found.</TableCell></TableRow>) : (
               items.map((s) => (<TableRow key={s.ServiceID}><TableCell className="font-bold">{s.ServiceName}</TableCell><TableCell>{s.treatmenttype?.TreatmentTypeName || "-"}</TableCell><TableCell>₹{s.Rate}</TableCell>
                 <TableCell className="text-right space-x-1">
                   <Link href={`/sub-treatment-type/${s.ServiceID}`}>

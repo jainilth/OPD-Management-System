@@ -12,7 +12,6 @@ import {
     Layers,
     ListTree,
     ArrowRight,
-    Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -170,28 +169,28 @@ export default function DashboardHome({ role, username }: DashboardHomeProps) {
     const stats = [
         {
             name: "Total Patients",
-            value: loading ? "..." : totalPatients.toLocaleString(),
+            value: totalPatients.toLocaleString(),
             icon: Users,
             iconColor: "text-blue-600",
             bg: "bg-blue-100",
         },
         {
             name: "Today's Visits",
-            value: loading ? "..." : String(todayVisits),
+            value: String(todayVisits),
             icon: CalendarCheck,
             iconColor: "text-green-600",
             bg: "bg-green-100",
         },
         {
             name: "Active Doctors",
-            value: loading ? "..." : String(totalDoctors),
+            value: String(totalDoctors),
             icon: Stethoscope,
             iconColor: "text-purple-600",
             bg: "bg-purple-100",
         },
         {
             name: "Today's Revenue",
-            value: loading ? "..." : formatCurrency(dailyRevenue),
+            value: formatCurrency(dailyRevenue),
             icon: TrendingUp,
             iconColor: "text-orange-600",
             bg: "bg-orange-100",
@@ -213,7 +212,11 @@ export default function DashboardHome({ role, username }: DashboardHomeProps) {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{stat.name}</p>
-                                        <p className="mt-1 text-3xl font-black text-slate-900">{stat.value}</p>
+                                        {loading ? (
+                                            <div className="mt-2 h-8 w-20 animate-pulse rounded-lg bg-slate-200" />
+                                        ) : (
+                                            <p className="mt-1 text-3xl font-black text-slate-900">{stat.value}</p>
+                                        )}
                                     </div>
                                     <div className={cn("p-4 rounded-2xl group-hover:rotate-6 transition-transform", stat.bg)}>
                                         <stat.icon className={cn("h-6 w-6", stat.iconColor)} />
@@ -269,9 +272,23 @@ export default function DashboardHome({ role, username }: DashboardHomeProps) {
                         <CardContent>
                             <div className="space-y-4">
                                 {loading ? (
-                                    <div className="flex items-center justify-center py-10 text-slate-400">
-                                        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
-                                    </div>
+                                    Array.from({ length: 5 }).map((_, index) => (
+                                        <div key={`recent-visit-skeleton-${index}`} className="p-4 rounded-2xl border border-slate-100">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-12 w-12 rounded-2xl bg-slate-200 animate-pulse" />
+                                                    <div className="space-y-2">
+                                                        <div className="h-4 w-36 rounded bg-slate-200 animate-pulse" />
+                                                        <div className="h-3 w-28 rounded bg-slate-100 animate-pulse" />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2 text-right">
+                                                    <div className="h-4 w-20 rounded bg-slate-200 animate-pulse" />
+                                                    <div className="h-5 w-16 rounded-full bg-slate-100 animate-pulse" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
                                 ) : recentVisits.length === 0 ? (
                                     <p className="text-center py-10 text-slate-400">No visits recorded yet.</p>
                                 ) : (

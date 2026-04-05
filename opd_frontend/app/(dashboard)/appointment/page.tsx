@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllAppointments, GetMyAppointments, CreateAppointment, UpdateAppointment, DeleteAppointment } from "@/app/service/appointment.service";
 import { GetAllPatients } from "@/app/service/patient.service";
@@ -136,9 +137,7 @@ export default function AppointmentPage() {
                         </TableHeader>
                         <TableBody>
                             {loading ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-10">Loading...</TableCell>
-                                </TableRow>
+                                <TableSkeletonRows columns={5} />
                             ) : patientOwnedAppointments.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center py-10 text-slate-500">No appointments found.</TableCell>

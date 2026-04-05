@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllUsers, CreateUser, UpdateUser, DeleteUser, GetAllRoles } from "@/app/service/user.service";
 import { useRole } from "@/context/RoleContext";
@@ -39,11 +40,11 @@ export default function UserPage() {
 
     if (user) {
       setEditing(user);
-      setFormData({ 
-        Username: user.Username, 
+      setFormData({
+        Username: user.Username,
         Password: "", // Don't pre-fill password for security
-        RoleID: String(user.RoleID), 
-        Mobile: user.Mobile || "" 
+        RoleID: String(user.RoleID),
+        Mobile: user.Mobile || ""
       });
     } else {
       setEditing(null);
@@ -56,33 +57,33 @@ export default function UserPage() {
     e.preventDefault();
     if ((editing && !canEdit) || (!editing && !canCreate)) return;
 
-    const payload = { 
-      ...formData, 
+    const payload = {
+      ...formData,
       RoleID: parseInt(formData.RoleID)
     };
-    
+
     // If editing and password is empty, don't send it to backend to avoid overwriting with empty
     if (editing && !payload.Password) {
       delete (payload as any).Password;
     }
 
-    if (editing) { 
-      await UpdateUser(editing.UserID, payload); 
-    } else { 
-      await CreateUser(payload); 
+    if (editing) {
+      await UpdateUser(editing.UserID, payload);
+    } else {
+      await CreateUser(payload);
     }
-    
+
     setIsModalOpen(false);
     fetchData();
   };
 
-  const handleDelete = async (id: number) => { 
+  const handleDelete = async (id: number) => {
     if (!canDelete) return;
 
-    if (confirm("Are you sure you want to delete this user?")) { 
-      await DeleteUser(id); 
-      fetchData(); 
-    } 
+    if (confirm("Are you sure you want to delete this user?")) {
+      await DeleteUser(id);
+      fetchData();
+    }
   };
 
   const getRoleName = (roleId: number) => {
@@ -117,9 +118,7 @@ export default function UserPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10">Loading...</TableCell>
-                </TableRow>
+                <TableSkeletonRows columns={4} />
               ) : users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-10 text-slate-500">No users found.</TableCell>
@@ -154,31 +153,31 @@ export default function UserPage() {
         </CardContent>
       </Card>
 
-      <Modal 
-        isOpen={isModalOpen && (canCreate || canEdit)} 
-        onClose={() => setIsModalOpen(false)} 
+      <Modal
+        isOpen={isModalOpen && (canCreate || canEdit)}
+        onClose={() => setIsModalOpen(false)}
         title={editing ? "Edit User" : "Add User"}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input 
-            label="Username" 
-            value={formData.Username} 
-            onChange={(e) => setFormData({ ...formData, Username: e.target.value })} 
-            required 
+          <Input
+            label="Username"
+            value={formData.Username}
+            onChange={(e) => setFormData({ ...formData, Username: e.target.value })}
+            required
           />
-          <Input 
-            label={editing ? "Password (leave blank to keep current)" : "Password"} 
-            type="password" 
-            value={formData.Password} 
-            onChange={(e) => setFormData({ ...formData, Password: e.target.value })} 
-            required={!editing} 
+          <Input
+            label={editing ? "Password (leave blank to keep current)" : "Password"}
+            type="password"
+            value={formData.Password}
+            onChange={(e) => setFormData({ ...formData, Password: e.target.value })}
+            required={!editing}
           />
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-slate-700">Role</label>
-            <select 
-              className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              value={formData.RoleID} 
-              onChange={(e) => setFormData({ ...formData, RoleID: e.target.value })} 
+            <select
+              className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.RoleID}
+              onChange={(e) => setFormData({ ...formData, RoleID: e.target.value })}
               required
             >
               <option value="">Select Role</option>
@@ -187,10 +186,10 @@ export default function UserPage() {
               ))}
             </select>
           </div>
-          <Input 
-            label="Mobile" 
-            value={formData.Mobile} 
-            onChange={(e) => setFormData({ ...formData, Mobile: e.target.value })} 
+          <Input
+            label="Mobile"
+            value={formData.Mobile}
+            onChange={(e) => setFormData({ ...formData, Mobile: e.target.value })}
           />
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Cancel</Button>

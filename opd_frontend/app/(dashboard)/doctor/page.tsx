@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllDoctors, CreateDoctor, UpdateDoctor, DeleteDoctor, CheckUserByMobile } from "@/app/service/doctor.service";
 import { GetAllDepartments } from "@/app/service/master.service";
@@ -39,7 +40,7 @@ export default function DoctorPage() {
   const [mobileSearchTerm, setMobileSearchTerm] = useState("");
   const [formData, setFormData] = useState({ DoctorName: "", DepartmentID: "", ConsultationFee: "", HospitalID: "", Mobile: "", Username: "", Password: "" });
 
-  const filteredDoctorsByMobile = doctors.filter(d => 
+  const filteredDoctorsByMobile = doctors.filter(d =>
     d.Mobile?.includes(mobileSearchTerm) || d.DoctorName?.toLowerCase().includes(mobileSearchTerm.toLowerCase())
   );
 
@@ -172,11 +173,10 @@ export default function DoctorPage() {
       </div>
       {feedback && (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
-            feedback.type === "success"
+          className={`rounded-lg border px-4 py-3 text-sm ${feedback.type === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-red-200 bg-red-50 text-red-700"
-          }`}
+            }`}
         >
           {feedback.message}
         </div>
@@ -185,22 +185,22 @@ export default function DoctorPage() {
         <Table><TableHeader><TableRow>
           <TableHead>Name</TableHead><TableHead>Department</TableHead><TableHead>Fee</TableHead><TableHead>Mobile</TableHead><TableHead className="text-right">Actions</TableHead>
         </TableRow></TableHeader><TableBody>
-          {loading ? (<TableRow><TableCell colSpan={5} className="text-center py-10">Loading...</TableCell></TableRow>) : doctors.length === 0 ? (<TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">No doctors found.</TableCell></TableRow>) : (
-            doctors.map((d) => (<TableRow key={d.DoctorID}>
-              <TableCell className="font-bold">{d.DoctorName}</TableCell>
-              <TableCell>{d.department?.DepartmentName || "-"}</TableCell>
-              <TableCell>₹{d.ConsultationFee}</TableCell>
-              <TableCell>{d.Mobile || "-"}</TableCell>
-              <TableCell className="text-right space-x-1">
-                <Link href={`/doctor/${d.DoctorID}`}>
-                  <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
-                </Link>
-                {canAddEdit && <Button variant="ghost" size="icon" onClick={() => handleOpenModal(d)}><Pencil className="h-4 w-4" /></Button>}
-                {canDelete && <Button variant="ghost" size="icon" onClick={() => handleDelete(d.DoctorID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
-              </TableCell>
-            </TableRow>))
-          )}
-        </TableBody></Table>
+            {loading ? (<TableSkeletonRows columns={5} />) : doctors.length === 0 ? (<TableRow><TableCell colSpan={5} className="text-center py-10 text-slate-500">No doctors found.</TableCell></TableRow>) : (
+              doctors.map((d) => (<TableRow key={d.DoctorID}>
+                <TableCell className="font-bold">{d.DoctorName}</TableCell>
+                <TableCell>{d.department?.DepartmentName || "-"}</TableCell>
+                <TableCell>₹{d.ConsultationFee}</TableCell>
+                <TableCell>{d.Mobile || "-"}</TableCell>
+                <TableCell className="text-right space-x-1">
+                  <Link href={`/doctor/${d.DoctorID}`}>
+                    <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
+                  </Link>
+                  {canAddEdit && <Button variant="ghost" size="icon" onClick={() => handleOpenModal(d)}><Pencil className="h-4 w-4" /></Button>}
+                  {canDelete && <Button variant="ghost" size="icon" onClick={() => handleDelete(d.DoctorID)}><Trash2 className="h-4 w-4 text-red-500" /></Button>}
+                </TableCell>
+              </TableRow>))
+            )}
+          </TableBody></Table>
       </CardContent></Card>
 
       <Modal isOpen={isModalOpen && canAddEdit} onClose={() => setIsModalOpen(false)} title={editing ? "Edit Doctor" : "Add Doctor"}>
@@ -213,20 +213,19 @@ export default function DoctorPage() {
               {departments.map((d: any) => (<option key={d.DepartmentID} value={d.DepartmentID}>{d.DepartmentName}</option>))}
             </select>
           </div>
-          <Input label="Consultation Fee" type="number" value={formData.ConsultationFee} onChange={(e) => setFormData({ ...formData, ConsultationFee: e.target.value })} required />    
+          <Input label="Consultation Fee" type="number" value={formData.ConsultationFee} onChange={(e) => setFormData({ ...formData, ConsultationFee: e.target.value })} required />
           <div className="space-y-1.5 relative">
             <label className="text-sm font-semibold text-slate-700">Mobile</label>
             <div className="relative">
               <input
                 value={mobileSearchTerm}
                 placeholder="Search or enter mobile"
-                className={`flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
-                  !editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
+                className={`flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${!editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
                     ? "border-emerald-400 focus:ring-emerald-500"
                     : !editing && !isCheckingMobile && (mobileCheck?.existsInDoctor || mobileCheck?.existsInPatient)
                       ? "border-red-400 focus:ring-red-500"
                       : "border-slate-200 focus:ring-blue-500"
-                }`}
+                  }`}
                 onFocus={() => {
                   if (!editing) setMobileSearchOpen(true);
                 }}

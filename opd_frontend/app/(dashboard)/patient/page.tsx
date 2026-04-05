@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllPatients, CreatePatient, UpdatePatient, DeletePatient, CheckUserByMobile } from "@/app/service/patient.service";
 import { useRole } from "@/context/RoleContext";
@@ -147,11 +148,10 @@ export default function PatientPage() {
       </div>
       {feedback && (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${
-            feedback.type === "success"
+          className={`rounded-lg border px-4 py-3 text-sm ${feedback.type === "success"
               ? "border-emerald-200 bg-emerald-50 text-emerald-700"
               : "border-red-200 bg-red-50 text-red-700"
-          }`}
+            }`}
         >
           {feedback.message}
         </div>
@@ -160,7 +160,7 @@ export default function PatientPage() {
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>DOB</TableHead><TableHead>Gender</TableHead><TableHead>Mobile</TableHead><TableHead>Address</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {loading ? (<TableRow><TableCell colSpan={6} className="text-center py-10">Loading...</TableCell></TableRow>) : filtered.length === 0 ? (<TableRow><TableCell colSpan={6} className="text-center py-10 text-slate-500">No patients found.</TableCell></TableRow>) : (
+            {loading ? (<TableSkeletonRows columns={6} />) : filtered.length === 0 ? (<TableRow><TableCell colSpan={6} className="text-center py-10 text-slate-500">No patients found.</TableCell></TableRow>) : (
               filtered.map((p) => (<TableRow key={p.PatientID}><TableCell className="font-bold">{p.FullName}</TableCell><TableCell>{p.DOB?.split("T")[0]}</TableCell><TableCell>{p.Gender}</TableCell><TableCell>{p.Mobile}</TableCell><TableCell>{p.Address}</TableCell>
                 <TableCell className="text-right space-x-1">
                   <Link href={`/patient/${p.PatientID}`}>
@@ -189,13 +189,12 @@ export default function PatientPage() {
               <input
                 value={mobileSearchTerm}
                 placeholder="Search or enter mobile"
-                className={`flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
-                  !editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
+                className={`flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 ${!editing && !isCheckingMobile && mobileCheck?.existsInUsers && !mobileCheck.existsInDoctor && !mobileCheck.existsInPatient
                     ? "border-emerald-400 focus:ring-emerald-500"
                     : !editing && !isCheckingMobile && (mobileCheck?.existsInDoctor || mobileCheck?.existsInPatient)
                       ? "border-red-400 focus:ring-red-500"
                       : "border-slate-200 focus:ring-blue-500"
-                }`}
+                  }`}
                 onFocus={() => {
                   if (!editing) setMobileSearchOpen(true);
                 }}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllOPDVisits, CreateOPDVisit, CreateOPDDiagnosis, UpdateOPDVisit, DeleteOPDVisit } from "@/app/service/opdvisit.service";
 import { GetAllPatients } from "@/app/service/patient.service";
@@ -38,6 +39,11 @@ export default function OPDPage() {
   });
 
   const minVisitDateTime = new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16);
+
+  const isFutureVisit = (visitDateTime: string) => {
+    const parsed = new Date(visitDateTime);
+    return !Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now();
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -72,6 +78,11 @@ export default function OPDPage() {
   };
 
   const openEditModal = (visit: any) => {
+    if (!isFutureVisit(visit?.VisitDateTime)) {
+      alert("Only future OPD visits can be updated");
+      return;
+    }
+
     setEditingVisit(visit);
     setFormData({
       PatientID: String(visit.PatientID || ""),
@@ -102,13 +113,23 @@ export default function OPDPage() {
     }
 
     if (editingVisit) {
-      await UpdateOPDVisit(editingVisit.OPDID, {
+      if (!isFutureVisit(editingVisit.VisitDateTime)) {
+        alert("Only future OPD visits can be updated");
+        return;
+      }
+
+      const updateResult = await UpdateOPDVisit(editingVisit.OPDID, {
         PatientID: parseInt(formData.PatientID),
         DoctorID: parseInt(formData.DoctorID),
         VisitDateTime: new Date(formData.VisitDateTime).toISOString(),
         VisitType: formData.VisitType,
         RegistrationFee: parseFloat(formData.RegistrationFee),
       });
+
+      if (updateResult?.error) {
+        alert(updateResult.error);
+        return;
+      }
     } else {
       const visitResult = await CreateOPDVisit({
         PatientID: parseInt(formData.PatientID),
@@ -117,6 +138,11 @@ export default function OPDPage() {
         VisitType: formData.VisitType,
         RegistrationFee: parseFloat(formData.RegistrationFee)
       });
+
+      if (visitResult?.error) {
+        alert(visitResult.error);
+        return;
+      }
 
       const opdId = visitResult?.OPDID || visitResult?.data?.OPDID;
       if (opdId && formData.SelectedDiagnoses.length > 0) {
@@ -140,7 +166,7 @@ export default function OPDPage() {
       <Card><CardContent className="pt-6">
         <Table><TableHeader><TableRow><TableHead>OPD No</TableHead><TableHead>Date</TableHead><TableHead>Patient</TableHead><TableHead>Doctor</TableHead><TableHead>Visit Type</TableHead><TableHead>Fee</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {loading ? (<TableRow><TableCell colSpan={7} className="text-center py-10">Loading...</TableCell></TableRow>) : visits.length === 0 ? (<TableRow><TableCell colSpan={7} className="text-center py-10 text-slate-500">No visits recorded.</TableCell></TableRow>) : (
+            {loading ? (<TableSkeletonRows columns={7} />) : visits.length === 0 ? (<TableRow><TableCell colSpan={7} className="text-center py-10 text-slate-500">No visits recorded.</TableCell></TableRow>) : (
               visits.map((v) => (<TableRow key={v.OPDID}><TableCell className="font-mono text-xs font-bold">OPD-{v.OPDNo || v.OPDID}</TableCell><TableCell>{formatDate(v.VisitDateTime)}</TableCell><TableCell>{v.patient?.FullName || "-"}</TableCell><TableCell>{v.doctor?.DoctorName || "-"}</TableCell>
                 <TableCell><span className={`px-2 py-1 rounded text-xs font-bold ${v.VisitType === "New" ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"}`}>{v.VisitType}</span></TableCell><TableCell>₹{v.RegistrationFee}</TableCell>
                 <TableCell className="text-right space-x-1">
@@ -148,7 +174,13 @@ export default function OPDPage() {
                     <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
                   </Link>
                   {canEdit && (
-                    <Button variant="ghost" size="icon" title="Edit" onClick={() => openEditModal(v)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={isFutureVisit(v.VisitDateTime) ? "Edit" : "Only future visits can be edited"}
+                      onClick={() => openEditModal(v)}
+                      disabled={!isFutureVisit(v.VisitDateTime)}
+                    >
                       <Pencil className="h-4 w-4 text-amber-500" />
                     </Button>
                   )}

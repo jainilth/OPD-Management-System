@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/Table";
+import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
 import { GetAllHospitals, CreateHospital, UpdateHospital, DeleteHospital } from "@/app/service/hospital.service";
 import { useRole } from "@/context/RoleContext";
@@ -115,7 +116,7 @@ export default function HospitalPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={6} className="text-center py-10">Loading...</TableCell></TableRow>
+                <TableSkeletonRows columns={6} />
               ) : hospitals.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="text-center py-10 text-slate-500">No hospitals found.</TableCell></TableRow>
               ) : (
