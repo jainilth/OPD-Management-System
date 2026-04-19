@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, ReceiptIndianRupee, Calculator, Printer, Eye, Search, X, Pencil } from "lucide-react";
+import { Plus, Trash2, ReceiptIndianRupee, Calculator, Printer, Eye, Search, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/Table";
 import { TableSkeletonRows } from "@/components/ui/TableSkeletonRows";
 import { Modal } from "@/components/ui/Modal";
-import { GetAllInvoices, GetMyInvoices, CreateInvoice, CreateInvoiceItem, UpdateInvoice, DeleteInvoice } from "@/app/service/invoice.service";
+import { GetAllInvoices, GetMyInvoices, CreateInvoice, CreateInvoiceItem, DeleteInvoice } from "@/app/service/invoice.service";
 import { GetAllOPDVisits } from "@/app/service/opdvisit.service";
 import { GetAllServices, GetAllPaymentModes } from "@/app/service/master.service";
 import { GetAllUsers } from "@/app/service/user.service";
@@ -21,7 +21,6 @@ interface ItemForm { ServiceID: string; Quantity: number; Rate: number; Amount: 
 export default function ReceiptPage() {
   const { role } = useRole();
   const canCreate = hasRole(role, ["Admin", "Receptionist"]);
-  const canEdit = hasRole(role, ["Admin"]);
   const canDelete = hasRole(role, ["Admin"]);
   const isUserSide = hasRole(role, ["Patient", "User"]);
 
@@ -32,7 +31,6 @@ export default function ReceiptPage() {
   const [paymentModes, setPaymentModes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<any | null>(null);
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState("");
   const [formData, setFormData] = useState({ UserID: "", OPDID: "", PaymentModeID: "1", Items: [] as ItemForm[] });
@@ -45,23 +43,9 @@ export default function ReceiptPage() {
   );
 
   const resetForm = () => {
-    setEditingInvoice(null);
     setUserSearchTerm("");
     setUserSearchOpen(false);
     setFormData({ UserID: "", OPDID: "", PaymentModeID: "1", Items: [] });
-  };
-
-  const openEditModal = (invoice: any) => {
-    setEditingInvoice(invoice);
-    setFormData({
-      UserID: String(invoice.UserID || ""),
-      OPDID: String(invoice.OPDID || ""),
-      PaymentModeID: String(invoice.PaymentModeID || "1"),
-      Items: [],
-    });
-    setUserSearchTerm(invoice.user?.Username || "");
-    setUserSearchOpen(false);
-    setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -112,27 +96,18 @@ export default function ReceiptPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canCreate && !canEdit) return;
+    if (!canCreate) return;
     if (!formData.UserID) {
       alert("Please select a user");
       return;
     }
 
-    if (editingInvoice) {
-      await UpdateInvoice(editingInvoice.InvoiceID, {
-        UserID: parseInt(formData.UserID),
-        OPDID: parseInt(formData.OPDID),
-        PaymentModeID: parseInt(formData.PaymentModeID),
-        InvoiceDate: editingInvoice.InvoiceDate || new Date().toISOString(),
-        TotalAmount: editingInvoice.TotalAmount,
-      });
-      setIsModalOpen(false);
-      resetForm();
-      fetchData();
+    const invoiceResult = await CreateInvoice({ UserID: parseInt(formData.UserID), OPDID: parseInt(formData.OPDID), InvoiceDate: new Date().toISOString(), TotalAmount: totalAmount, PaymentModeID: parseInt(formData.PaymentModeID) });
+    if (invoiceResult?.error) {
+      alert(invoiceResult.error);
       return;
     }
 
-    const invoiceResult = await CreateInvoice({ UserID: parseInt(formData.UserID), OPDID: parseInt(formData.OPDID), InvoiceDate: new Date().toISOString(), TotalAmount: totalAmount, PaymentModeID: parseInt(formData.PaymentModeID) });
     const invoiceId = invoiceResult?.InvoiceID || invoiceResult?.data?.InvoiceID;
     if (invoiceId && formData.Items.length > 0) {
       await Promise.all(formData.Items.map(item => CreateInvoiceItem({ InvoiceID: invoiceId, ServiceID: parseInt(item.ServiceID), Quantity: item.Quantity, Rate: item.Rate, Amount: item.Amount })));
@@ -158,11 +133,6 @@ export default function ReceiptPage() {
                   <Link href={`/receipt/${inv.InvoiceID}`}>
                     <Button variant="ghost" size="icon" title="View Details"><Eye className="h-4 w-4 text-blue-500" /></Button>
                   </Link>
-                  {canEdit && (
-                    <Button variant="ghost" size="icon" title="Edit" onClick={() => openEditModal(inv)}>
-                      <Pencil className="h-4 w-4 text-amber-500" />
-                    </Button>
-                  )}
                   {canDelete && (
                     <Button variant="ghost" size="icon" title="Delete" onClick={() => handleDelete(inv.InvoiceID)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
@@ -175,7 +145,7 @@ export default function ReceiptPage() {
         </Table>
       </CardContent></Card>
 
-      <Modal isOpen={isModalOpen && (canCreate || canEdit)} onClose={() => setIsModalOpen(false)} title={editingInvoice ? "Edit Receipt Entry" : "Generate New Receipt"} description={editingInvoice ? "Update receipt details." : "Select visit and add services to bill."}>
+      <Modal isOpen={isModalOpen && canCreate} onClose={() => setIsModalOpen(false)} title="Generate New Receipt" description="Select visit and add services to bill.">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-1.5 relative">
@@ -250,33 +220,31 @@ export default function ReceiptPage() {
               </select>
             </div>
           </div>
-          {!editingInvoice && (
-            <>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between border-b pb-2"><h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Bill Items</h3><Button type="button" variant="outline" size="sm" onClick={addItem} className="h-8"><Plus className="mr-1 h-3 w-3" /> Add Service</Button></div>
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                  {formData.Items.map((item, index) => (
-                    <div key={index} className="flex gap-2 items-end bg-slate-50 p-3 rounded-lg border border-slate-100">
-                      <div className="flex-1 space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Service</label>
-                        <select className="flex h-9 w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs focus:outline-none" value={item.ServiceID} onChange={(e) => updateItem(index, "ServiceID", e.target.value)} required>
-                          <option value="">Select Service</option>{services.map((s: any) => (<option key={s.ServiceID} value={s.ServiceID}>{s.ServiceName} (₹{s.Rate})</option>))}
-                        </select>
-                      </div>
-                      <div className="w-20 space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Qty</label><input type="number" className="h-9 w-full rounded border border-slate-200 px-2 py-1 text-xs" value={item.Quantity} min="1" onChange={(e) => updateItem(index, "Quantity", parseInt(e.target.value))} required /></div>
-                      <div className="w-24 space-y-1 text-right"><label className="text-[10px] font-bold text-slate-400 uppercase">Total</label><div className="h-9 flex items-center justify-end px-2 text-xs font-bold text-slate-800">₹{item.Amount}</div></div>
-                      <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4" /></Button>
+          <>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b pb-2"><h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Bill Items</h3><Button type="button" variant="outline" size="sm" onClick={addItem} className="h-8"><Plus className="mr-1 h-3 w-3" /> Add Service</Button></div>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                {formData.Items.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-end bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    <div className="flex-1 space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Service</label>
+                      <select className="flex h-9 w-full rounded border border-slate-200 bg-white px-2 py-1 text-xs focus:outline-none" value={item.ServiceID} onChange={(e) => updateItem(index, "ServiceID", e.target.value)} required>
+                        <option value="">Select Service</option>{services.map((s: any) => (<option key={s.ServiceID} value={s.ServiceID}>{s.ServiceName} (₹{s.Rate})</option>))}
+                      </select>
                     </div>
-                  ))}
-                  {formData.Items.length === 0 && (<p className="text-center py-4 text-xs text-slate-400 italic">No services added to bill yet.</p>)}
-                </div>
+                    <div className="w-20 space-y-1"><label className="text-[10px] font-bold text-slate-400 uppercase">Qty</label><input type="number" className="h-9 w-full rounded border border-slate-200 px-2 py-1 text-xs" value={item.Quantity} min="1" onChange={(e) => updateItem(index, "Quantity", parseInt(e.target.value))} required /></div>
+                    <div className="w-24 space-y-1 text-right"><label className="text-[10px] font-bold text-slate-400 uppercase">Total</label><div className="h-9 flex items-center justify-end px-2 text-xs font-bold text-slate-800">₹{item.Amount}</div></div>
+                    <Button type="button" variant="ghost" size="icon" className="h-9 w-9 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => removeItem(index)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+                {formData.Items.length === 0 && (<p className="text-center py-4 text-xs text-slate-400 italic">No services added to bill yet.</p>)}
               </div>
-              <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-xl shadow-inner">
-                <div className="flex items-center gap-2"><Calculator className="h-5 w-5 text-blue-400" /><span className="text-sm font-medium text-slate-300">Total Payable Amount</span></div>
-                <div className="text-2xl font-black">{formatCurrency(totalAmount)}</div>
-              </div>
-            </>
-          )}
-          <div className="flex justify-end gap-3"><Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Discard</Button><Button type="submit" disabled={(!editingInvoice && formData.Items.length === 0) || !formData.OPDID || !formData.UserID} className="px-8">{editingInvoice ? "Update Receipt" : "Generate & Print Receipt"}</Button></div>
+            </div>
+            <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-xl shadow-inner">
+              <div className="flex items-center gap-2"><Calculator className="h-5 w-5 text-blue-400" /><span className="text-sm font-medium text-slate-300">Total Payable Amount</span></div>
+              <div className="text-2xl font-black">{formatCurrency(totalAmount)}</div>
+            </div>
+          </>
+          <div className="flex justify-end gap-3"><Button variant="outline" type="button" onClick={() => setIsModalOpen(false)}>Discard</Button><Button type="submit" disabled={formData.Items.length === 0 || !formData.OPDID || !formData.UserID} className="px-8">Generate & Print Receipt</Button></div>
         </form>
       </Modal>
     </div>

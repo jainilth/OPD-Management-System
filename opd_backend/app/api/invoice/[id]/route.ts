@@ -2,6 +2,7 @@ import { invoiceService } from "@/app/services/invoice.service";
 import { authenticate } from "@/middlewares/auth.middleware";
 import { handleError } from "@/middlewares/error.middleware";
 import { authorize } from "@/middlewares/role.middleware";
+import { AppError } from "@/utils/app-error";
 import { success } from "@/utils/response";
 import { NextRequest } from "next/server";
 
@@ -32,14 +33,9 @@ export async function PATCH(
     try {
         const user: any = authenticate(req)
         authorize(user, ["Admin", "Receptionist"])
+        await params
 
-        const { id } = await params
-
-        const body = await req.json()
-
-        const updated = await invoiceService.updateInvoice(Number(id), body)
-
-        return success(updated)
+        throw new AppError("Receipt cannot be updated once created", 400)
     }
     catch (error) {
         return handleError(error)

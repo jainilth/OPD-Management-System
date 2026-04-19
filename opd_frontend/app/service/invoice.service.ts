@@ -22,15 +22,6 @@ export async function CreateInvoice(data: any) {
     return result
 }
 
-export async function UpdateInvoice(id: number, data: any) {
-    const result = await authFetch(`/api/invoice/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-    })
-    revalidatePath('/receipt')
-    return result
-}
-
 export async function DeleteInvoice(id: number) {
     const result = await authFetch(`/api/invoice/${id}`, {
         method: 'DELETE',
