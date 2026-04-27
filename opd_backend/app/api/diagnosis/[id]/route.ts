@@ -8,7 +8,7 @@ import { NextRequest } from "next/server";
 //getbyid
 export async function GET(
     req: NextRequest,
-    { params }: { params: Promise<{ id: number }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const user: any = authenticate(req)
@@ -27,7 +27,7 @@ export async function GET(
 //update
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: Promise<{ id: number }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const user: any = authenticate(req)
@@ -49,7 +49,7 @@ export async function PATCH(
 //delete
 export async function DELETE(
     req: NextRequest,
-    { params }: { params: Promise<{ id: number }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const user: any = authenticate(req)
